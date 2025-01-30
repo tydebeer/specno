@@ -23,6 +23,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "9c0a8773-e7a3-478d-a020-ebc707cc5894"
+      }
+    },
+    "owner": "tydebeer"
   }
 }
