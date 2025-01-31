@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Animated } from 'react-native';
 import { Feather, MaterialIcons, Ionicons } from '@expo/vector-icons';
 
-interface OfficeCardProps {
+interface CardProps {
   companyName: string;
   staffCount: number;
   phoneNumber: string;
@@ -12,7 +12,7 @@ interface OfficeCardProps {
   onEdit?: () => void;
 }
 
-export const OfficeCard: React.FC<OfficeCardProps> = ({
+export const Card: React.FC<CardProps> = ({
   companyName,
   staffCount,
   phoneNumber,
@@ -39,9 +39,9 @@ export const OfficeCard: React.FC<OfficeCardProps> = ({
 
   return (
     <View style={styles.cardContainer}>
-      <View style={styles.accentBar} />
-      <View style={styles.cardWrapper}>
-        <View style={styles.card}>
+      <View style={styles.card}>
+        <View style={styles.accentBar} />
+        <View style={styles.contentWrapper}>
           <View style={styles.header}>
             <Text style={styles.title}>{companyName}</Text>
             <TouchableOpacity onPress={onEdit}>
@@ -109,24 +109,13 @@ export const OfficeCard: React.FC<OfficeCardProps> = ({
 
 const styles = StyleSheet.create({
   cardContainer: {
-    position: 'relative',
     width: '100%',
-    flexDirection: 'row',
-  },
-  accentBar: {
-    width: 12,
-    backgroundColor: '#2F80ED',
-    borderTopLeftRadius: 20,
-    borderBottomLeftRadius: 20,
-  },
-  cardWrapper: {
-    flex: 1,
   },
   card: {
     backgroundColor: '#fff',
     borderRadius: 20,
-    padding: 20,
     width: '100%',
+    flexDirection: 'row',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -135,6 +124,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+    overflow: 'hidden',
+  },
+  accentBar: {
+    width: 12,
+    backgroundColor: '#2F80ED',
+  },
+  contentWrapper: {
+    flex: 1,
+    padding: 20,
   },
   header: {
     flexDirection: 'row',

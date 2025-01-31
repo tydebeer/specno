@@ -2,14 +2,14 @@ import React from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
-interface AddButtonProps {
+interface ActionButtonProps {
   onPress: () => void;
   size?: number;
 }
 
-export const AddButton: React.FC<AddButtonProps> = ({ 
+export const ActionButton: React.FC<ActionButtonProps> = ({ 
   onPress, 
-  size = 56 // default size
+  size = 64
 }) => {
   return (
     <TouchableOpacity 
@@ -30,7 +30,7 @@ export const AddButton: React.FC<AddButtonProps> = ({
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: '#2F80ED', // Blue color - adjust to match your design
+    backgroundColor: '#0d4574',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',

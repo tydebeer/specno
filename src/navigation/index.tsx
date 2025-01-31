@@ -1,11 +1,10 @@
-import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Home, Office } from './pages';
+import { Home, Office } from '../pages';
 
 const Stack = createNativeStackNavigator();
 
-export default function App() {
+export const Navigation = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -14,4 +13,4 @@ export default function App() {
       </Stack.Navigator>
     </NavigationContainer>
   );
-}
+}; 
