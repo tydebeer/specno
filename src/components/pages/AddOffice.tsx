@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, SafeAreaView, Platform, StatusBar } from 'react-native';
 import { InputField } from '../atoms/InputField';
 import { PrimaryButton } from '../atoms/PrimaryButton';
 import { Title } from '../atoms/Title';
@@ -8,9 +8,21 @@ import { Header } from '../atoms/Header';
 import { useNavigation } from '@react-navigation/native';
 import { OFFICE_COLORS } from '../../config/uiConfig';
 
-export const AddOffice = () => {
+type OfficeData = {
+  officeName: string;
+  physicalAddress: string;
+  emailAddress: string;
+  phoneNumber: string;
+  maximumCapacity: string;
+  officeColor: string;
+}
+
+export const AddOffice = ({ route }: { route: any }) => {
   const navigation = useNavigation();
-  const [officeData, setOfficeData] = useState({
+  const existingOffice = route.params?.officeData;
+  const isEditing = !!existingOffice;
+
+  const [officeData, setOfficeData] = useState<OfficeData>({
     officeName: '',
     physicalAddress: '',
     emailAddress: '',
@@ -18,6 +30,19 @@ export const AddOffice = () => {
     maximumCapacity: '',
     officeColor: ''
   });
+
+  useEffect(() => {
+    if (existingOffice) {
+      setOfficeData({
+        officeName: existingOffice.companyName,
+        physicalAddress: existingOffice.address,
+        emailAddress: existingOffice.email,
+        phoneNumber: existingOffice.phoneNumber,
+        maximumCapacity: existingOffice.capacity.toString(),
+        officeColor: existingOffice.color
+      });
+    }
+  }, [existingOffice]);
 
   const handleInputChange = (field: string, value: string) => {
     setOfficeData(prev => ({
@@ -38,9 +63,9 @@ export const AddOffice = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Header 
-        title="New Office"
+        title={isEditing ? "Edit Office" : "New Office"}
         onBackPress={() => navigation.goBack()}
       />
       
@@ -89,11 +114,11 @@ export const AddOffice = () => {
         </View>
 
         <PrimaryButton
-          title="ADD OFFICE"
+          title={isEditing ? "SAVE CHANGES" : "ADD OFFICE"}
           onPress={handleAddOffice}
         />
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -101,6 +126,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   content: {
     flex: 1,

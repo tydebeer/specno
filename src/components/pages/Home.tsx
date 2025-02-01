@@ -1,14 +1,9 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, SafeAreaView, TouchableOpacity, Platform, StatusBar } from 'react-native';
+import { StyleSheet, View, SafeAreaView, TouchableOpacity, Platform, StatusBar, ScrollView } from 'react-native';
 import { Title } from '../atoms';
 import { Card } from '../atoms/Card';
 import { ActionButton } from '../atoms/ActionButton';
 import { StaffModal } from '../molecules/StaffModal';
-
-// Type for our navigation
-type NavigationProps = {
-  navigate: (screen: string, params?: any) => void;
-};
 
 // Dummy data for offices
 const dummyOffices = [
@@ -42,6 +37,37 @@ const dummyOffices = [
     address: '15 Beach Road, Sea Point, Cape Town, 8005',
     color: '#4CAF50'
   },
+  {
+    id: '4',
+    companyName: 'Digital Space',
+    staffCount: 8,
+    phoneNumber: '084 777 8899',
+    email: 'hello@digitalspace.com',
+    capacity: 20,
+    address: '15 Beach Road, Sea Point, Cape Town, 8005',
+
+    color: '#4CAF50'
+  },{
+    id: '5',
+    companyName: 'Digital Space',
+    staffCount: 8,
+    phoneNumber: '084 777 8899',
+    email: 'hello@digitalspace.com',
+    capacity: 20,
+    address: '15 Beach Road, Sea Point, Cape Town, 8005',
+
+    color: '#4CAF50'
+  },{
+    id: '6',
+    companyName: 'Digital Space',
+    staffCount: 8,
+    phoneNumber: '084 777 8899',
+    email: 'hello@digitalspace.com',
+    capacity: 20,
+    address: '15 Beach Road, Sea Point, Cape Town, 8005',
+
+    color: '#4CAF50'
+  },
 ];
 
 export const Home = ({ navigation }: { navigation: any }) => {
@@ -49,6 +75,10 @@ export const Home = ({ navigation }: { navigation: any }) => {
 
   const handleCardPress = (office: typeof dummyOffices[0]) => {
     navigation.navigate('Office', { officeData: office });
+  };
+
+  const handleEditOffice = (office: typeof dummyOffices[0]) => {
+    navigation.navigate('AddOffice', { officeData: office });
   };
 
   const handleAddStaff = (selectedAvatar: string) => {
@@ -60,7 +90,11 @@ export const Home = ({ navigation }: { navigation: any }) => {
     <SafeAreaView style={styles.container}>
       <Title text="All Offices" />
       
-      <View style={styles.listContainer}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.listContainer}
+        showsVerticalScrollIndicator={false}
+      >
         {dummyOffices.map(office => (
           <TouchableOpacity 
             key={office.id}
@@ -73,10 +107,11 @@ export const Home = ({ navigation }: { navigation: any }) => {
               email={office.email}
               capacity={office.capacity}
               address={office.address}
+              onEdit={() => handleEditOffice(office)}
             />
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
 
       <View style={styles.buttonContainer}>
         <ActionButton 
@@ -90,10 +125,8 @@ export const Home = ({ navigation }: { navigation: any }) => {
         onPrimaryAction={handleAddStaff}
         title="Add Staff Member"
         primaryButtonTitle="Add"
-
       />
     </SafeAreaView>
-
   );
 };
 
@@ -103,8 +136,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F7F9',
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
-  listContainer: {
+  scrollView: {
     flex: 1,
+  },
+  listContainer: {
     padding: 20,
     gap: 16,
   },
