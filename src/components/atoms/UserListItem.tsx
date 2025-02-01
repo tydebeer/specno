@@ -2,13 +2,13 @@ import React from 'react';
 import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
-interface UserListItemProps {
+interface Props {
   name: string;
-  avatarUrl: string;
+  avatarUrl: any;
   onOptionsPress: () => void;
 }
 
-export const UserListItem: React.FC<UserListItemProps> = ({
+const UserListItem: React.FC<Props> = ({
   name,
   avatarUrl,
   onOptionsPress,
@@ -17,7 +17,7 @@ export const UserListItem: React.FC<UserListItemProps> = ({
     <View style={styles.container}>
       <View style={styles.leftContent}>
         <Image 
-          source={{ uri: avatarUrl }}
+          source={typeof avatarUrl === 'string' ? { uri: avatarUrl } : avatarUrl}
           style={styles.avatar}
         />
         <Text style={styles.name}>{name}</Text>
@@ -59,4 +59,6 @@ const styles = StyleSheet.create({
   optionsButton: {
     padding: 8,
   },
-}); 
+});
+
+export default UserListItem; 

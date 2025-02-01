@@ -8,8 +8,19 @@ export const AVATARS = {
   ASTRONAUT_LOVE: require('../../assets/avatars/avatar-7.png'),
 } as const;
 
-// Helper array for easy mapping
 export const AVATAR_LIST = Object.values(AVATARS);
+export type AvatarKey = keyof typeof AVATARS;
 
-// Type for avatar keys
-export type AvatarKey = keyof typeof AVATARS; 
+export const OFFICE_COLORS = [
+  '#FFB800', // yellow
+  '#FFA07A', // coral
+  '#FF4500', // orange red
+  '#8B4513', // brown
+  '#E6E6FA', // lavender
+  '#FF1493', // deep pink
+  '#98FF98', // mint
+  '#008000', // green
+  '#87CEEB', // sky blue
+  '#0000FF', // blue
+  '#800080', // purple
+]; 

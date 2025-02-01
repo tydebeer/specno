@@ -5,28 +5,39 @@ import {
   Modal, 
   Text, 
   TouchableOpacity,
-  Dimensions
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Avatar } from '../atoms/Avatar';
 import { PrimaryButton } from '../atoms/PrimaryButton';
-import { AVATAR_LIST } from '../../config/avatars';
+import { SecondaryButton } from '../atoms/SecondaryButton';
+import { AVATAR_LIST } from '../../config/uiConfig';
 
-// Get screen dimensions
 const { width } = Dimensions.get('window');
-const MODAL_WIDTH = width * 0.85; // 85% of screen width
+const MODAL_WIDTH = width * 0.85;
 
-interface AddStaffModalProps {
+interface StaffModalProps {
   visible: boolean;
   onClose: () => void;
-  onAdd: (selectedAvatar: string) => void;
+  onPrimaryAction: (selectedAvatar: string) => void;
+  onSecondaryAction?: () => void;
+  title: string;
+  primaryButtonTitle: string;
+  secondaryButtonTitle?: string;
+  showBackButton?: boolean;
 }
 
-export const AddStaffModal: React.FC<AddStaffModalProps> = ({
+export const StaffModal: React.FC<StaffModalProps> = ({
   visible,
   onClose,
-  onAdd,
+  onPrimaryAction,
+  onSecondaryAction,
+  title,
+  primaryButtonTitle,
+  secondaryButtonTitle,
+  showBackButton = true,
 }) => {
+  const [selectedAvatarIndex, setSelectedAvatarIndex] = useState<number | null>(null);
   const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
 
   return (
@@ -38,13 +49,15 @@ export const AddStaffModal: React.FC<AddStaffModalProps> = ({
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
           <View style={styles.header}>
-            <TouchableOpacity 
-              onPress={onClose}
-              style={styles.backButton}
-            >
-              <Ionicons name="arrow-back" size={24} color="#000" />
-            </TouchableOpacity>
-            <Text style={styles.title}>New Staff Member</Text>
+            {showBackButton && (
+              <TouchableOpacity 
+                onPress={onClose}
+                style={styles.backButton}
+              >
+                <Ionicons name="arrow-back" size={24} color="#000" />
+              </TouchableOpacity>
+            )}
+            <Text style={styles.title}>{title}</Text>
             <TouchableOpacity 
               onPress={onClose}
               style={styles.closeButton}
@@ -60,18 +73,27 @@ export const AddStaffModal: React.FC<AddStaffModalProps> = ({
               <Avatar
                 key={index}
                 source={avatar}
-                isSelected={selectedAvatar === avatar}
-                onPress={() => setSelectedAvatar(avatar)}
+                isSelected={selectedAvatarIndex === index}
+                onPress={() => {
+                  setSelectedAvatarIndex(index);
+                  setSelectedAvatar(avatar);
+                }}
               />
             ))}
           </View>
 
           <View style={styles.buttonContainer}>
             <PrimaryButton
-              title="ADD STAFF MEMBER"
-              onPress={() => selectedAvatar && onAdd(selectedAvatar)}
+              title={primaryButtonTitle}
+              onPress={() => selectedAvatar && onPrimaryAction(selectedAvatar)}
               disabled={!selectedAvatar}
             />
+            {secondaryButtonTitle && onSecondaryAction && (
+              <SecondaryButton
+                title={secondaryButtonTitle}
+                onPress={onSecondaryAction}
+              />
+            )}
           </View>
         </View>
       </View>
@@ -131,5 +153,6 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     width: '100%',
+    gap: 8,
   },
 }); 

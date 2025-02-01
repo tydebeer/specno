@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, SafeAreaView, TouchableOpacity, Platform, StatusBar } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { Title } from '../components/atoms';
-import { Card } from '../components/atoms/Card';
-import { ActionButton } from '../components/atoms/ActionButton';
-import { AddStaffModal } from '../components/molecules/AddStaffModal';
+import { Title } from '../atoms';
+import { Card } from '../atoms/Card';
+import { ActionButton } from '../atoms/ActionButton';
+import { StaffModal } from '../molecules/StaffModal';
 
 // Type for our navigation
 type NavigationProps = {
@@ -45,8 +44,7 @@ const dummyOffices = [
   },
 ];
 
-export const Home = () => {
-  const navigation = useNavigation<NavigationProps>();
+export const Home = ({ navigation }: { navigation: any }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const handleCardPress = (office: typeof dummyOffices[0]) => {
@@ -82,16 +80,20 @@ export const Home = () => {
 
       <View style={styles.buttonContainer}>
         <ActionButton 
-          onPress={() => setIsModalVisible(true)}
+          onPress={() => navigation.navigate('AddOffice')}
         />
       </View>
 
-      <AddStaffModal
+      <StaffModal
         visible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
-        onAdd={handleAddStaff}
+        onPrimaryAction={handleAddStaff}
+        title="Add Staff Member"
+        primaryButtonTitle="Add"
+
       />
     </SafeAreaView>
+
   );
 };
 

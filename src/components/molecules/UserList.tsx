@@ -1,6 +1,6 @@
 import React from 'react';
 import { FlatList, StyleSheet } from 'react-native';
-import { UserListItem } from '../atoms/UserListItem';
+import UserListItem from '../atoms/UserListItem';
 
 interface User {
   id: string;

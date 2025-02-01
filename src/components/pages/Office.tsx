@@ -2,10 +2,14 @@ import React from 'react';
 import { StyleSheet, View, SafeAreaView, TouchableOpacity, Text } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { Card } from '../components/atoms/Card';
-import { SearchBar } from '../components/atoms/SearchBar';
-import { StaffHeader } from '../components/atoms/StaffHeader';
-import { UserListItem } from '../components/atoms/UserListItem';
+import { Card } from '../atoms/Card';
+import { SearchBar } from '../atoms/SearchBar';
+import { StaffHeader } from '../atoms/StaffHeader';
+import UserListItem from '../atoms/UserListItem';
+import { ActionButton } from '../atoms/ActionButton';
+import { StaffModal } from '../molecules/StaffModal';
+import { AVATARS } from '../../config/uiConfig';
+
 
 type RouteParams = {
   officeData: {
@@ -19,41 +23,48 @@ type RouteParams = {
   };
 };
 
-// Dummy office data
-const officeData = {
-  companyName: 'Specno',
-  staffCount: 5,
-  phoneNumber: '082 364 9864',
-  email: 'info@specno.com',
-  capacity: 25,
-  address: '10 Willie Van Schoor Dr, Bo Oakdale, Cape Town, 7530',
-  color: '#2F80ED'
-};
-
 // Dummy staff data
 const staffMembers = [
   {
     id: '1',
     name: 'Jacques Jordaan',
-    avatarUrl: 'https://example.com/avatar1.jpg',
-  },
+    avatar: AVATARS.ASTRONAUT_WAVING,
+  },  
   {
     id: '2',
     name: 'Sarah Smith',
-    avatarUrl: 'https://example.com/avatar2.jpg',
+    avatar: AVATARS.ASTRONAUT_WAVING,
   },
   {
     id: '3',
     name: 'Mike Johnson',
-    avatarUrl: 'https://example.com/avatar3.jpg',
+    avatar: require('../../../assets/avatars/avatar-1.png'),
   },
 ];
+
 
 export const Office = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { officeData } = route.params as RouteParams;
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [isModalVisible, setIsModalVisible] = React.useState(false);
+
+  const filteredStaffMembers = React.useMemo(() => {
+    if (!searchQuery.trim()) {
+      return staffMembers;
+    }
+    
+    return staffMembers.filter(staff => 
+      staff.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+    );
+  }, [searchQuery]);
+
+  const handleAddStaff = (selectedAvatar: string) => {
+    // Handle adding new staff member
+    console.log('Adding staff with avatar:', selectedAvatar);
+    setIsModalVisible(false);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -79,20 +90,41 @@ export const Office = () => {
             placeholder="Search staff members"
           />
           
-          <StaffHeader count={staffMembers.length} />
+          <StaffHeader count={filteredStaffMembers.length} />
           
           <View style={styles.staffList}>
-            {staffMembers.map(staff => (
-              <UserListItem
-                key={staff.id}
-                name={staff.name}
-                avatarUrl={staff.avatarUrl}
-                onOptionsPress={() => console.log('Options pressed for:', staff.name)}
-              />
-            ))}
+            {filteredStaffMembers.length > 0 ? (
+              filteredStaffMembers.map(staff => (
+                <UserListItem
+                  key={staff.id}
+                  name={staff.name}
+                  avatarUrl={staff.avatar}
+                  onOptionsPress={() => console.log('Options pressed for:', staff.name)}
+                />
+              ))
+            ) : (
+              <View style={styles.noResultsContainer}>
+                <Text style={styles.noResultsText}>
+                  No staff members found matching "{searchQuery}"
+                </Text>
+              </View>
+            )}
           </View>
         </View>
       </View>
+
+      <View style={styles.buttonContainer}>
+        <ActionButton onPress={() => setIsModalVisible(true)} />
+      </View>
+
+      <StaffModal
+        visible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        onPrimaryAction={handleAddStaff}
+        title="New Staff Member"
+        primaryButtonTitle="ADD STAFF MEMBER"
+        showBackButton={true}
+      />
     </SafeAreaView>
   );
 };
@@ -137,5 +169,21 @@ const styles = StyleSheet.create({
   },
   staffList: {
     gap: 12,
+  },
+  noResultsContainer: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  noResultsText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    zIndex: 1,
   },
 }); 
