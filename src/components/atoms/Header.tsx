@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
   headerTitleContainer: {
     flex: 1,
     alignItems: 'center',
-    marginRight: 40, // To offset the back button and center the title
+    marginRight: 40,
   },
   headerTitle: {
     fontSize: 20,

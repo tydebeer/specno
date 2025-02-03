@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Animated } from 'react-native';
 import { Feather, MaterialIcons, Ionicons } from '@expo/vector-icons';
 
@@ -22,17 +22,17 @@ export const Card: React.FC<CardProps> = ({
   onEdit,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const rotateAnimation = new Animated.Value(0);
+  const rotateAnim = useRef(new Animated.Value(0)).current;
 
-  const toggleExpand = () => {
+  const handleMorePress = () => {
     setIsExpanded(!isExpanded);
-    Animated.spring(rotateAnimation, {
+    Animated.spring(rotateAnim, {
       toValue: isExpanded ? 0 : 1,
       useNativeDriver: true,
     }).start();
   };
 
-  const rotateInterpolate = rotateAnimation.interpolate({
+  const rotate = rotateAnim.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '180deg'],
   });
@@ -58,12 +58,12 @@ export const Card: React.FC<CardProps> = ({
 
           <TouchableOpacity 
             style={styles.moreInfoButton} 
-            onPress={toggleExpand}
+            onPress={handleMorePress}
           >
             <Text style={styles.moreInfo}>More info</Text>
-            <Animated.View style={{ transform: [{ rotate: rotateInterpolate }] }}>
+            <Animated.View style={{ transform: [{ rotate }] }}>
               <MaterialIcons 
-                name="keyboard-arrow-up" 
+                name="keyboard-arrow-down" 
                 size={24} 
                 color="#666" 
               />

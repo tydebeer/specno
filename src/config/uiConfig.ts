@@ -11,16 +11,21 @@ export const AVATARS = {
 export const AVATAR_LIST = Object.values(AVATARS);
 export type AvatarKey = keyof typeof AVATARS;
 
-export const OFFICE_COLORS = [
-  '#FFB800', // yellow
-  '#FFA07A', // coral
-  '#FF4500', // orange red
-  '#8B4513', // brown
-  '#E6E6FA', // lavender
-  '#FF1493', // deep pink
-  '#98FF98', // mint
-  '#008000', // green
-  '#87CEEB', // sky blue
-  '#0000FF', // blue
-  '#800080', // purple
-]; 
+export const OFFICE_COLORS_MAP = {
+  YELLOW: '#FFB800',
+  CORAL: '#FFA07A',
+  ORANGE_RED: '#FF4500',
+  BROWN: '#8B4513',
+  LAVENDER: '#E6E6FA',
+  PINK: '#FF1493',
+  MINT: '#98FF98',
+  GREEN: '#008000',
+  SKY_BLUE: '#87CEEB',
+  BLUE: '#0000FF',
+  PURPLE: '#800080',
+} as const;
+
+export type OfficeColorKey = keyof typeof OFFICE_COLORS_MAP;
+
+// For backwards compatibility or where we need the array of colors
+export const OFFICE_COLORS = Object.values(OFFICE_COLORS_MAP); 

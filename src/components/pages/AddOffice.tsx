@@ -6,16 +6,9 @@ import { Title } from '../atoms/Title';
 import { ColorPicker } from '../atoms/ColorPicker';
 import { Header } from '../atoms/Header';
 import { useNavigation } from '@react-navigation/native';
-import { OFFICE_COLORS } from '../../config/uiConfig';
-
-type OfficeData = {
-  officeName: string;
-  physicalAddress: string;
-  emailAddress: string;
-  phoneNumber: string;
-  maximumCapacity: string;
-  officeColor: string;
-}
+import { OFFICE_COLORS_MAP, OfficeColorKey } from '../../config/uiConfig';
+import { OfficeData } from '../../interfaces/OfficeData';
+import { officeService } from '../../services/officeService';
 
 export const AddOffice = ({ route }: { route: any }) => {
   const navigation = useNavigation();
@@ -28,7 +21,7 @@ export const AddOffice = ({ route }: { route: any }) => {
     emailAddress: '',
     phoneNumber: '',
     maximumCapacity: '',
-    officeColor: ''
+    officeColor: 'YELLOW'
   });
 
   useEffect(() => {
@@ -51,15 +44,36 @@ export const AddOffice = ({ route }: { route: any }) => {
     }));
   };
 
-  const handleColorSelect = (color: string) => {
+  const handleColorSelect = (color: OfficeColorKey) => {
     setOfficeData(prev => ({
       ...prev,
       officeColor: color
     }));
   };
 
-  const handleAddOffice = () => {
-    console.log('Office Data:', officeData);
+  const handleAddOffice = async () => {
+    try {
+      const officeToSave = {
+        name: officeData.officeName,
+        address: officeData.physicalAddress,
+        email: officeData.emailAddress,
+        phoneNumber: officeData.phoneNumber,
+        capacity: parseInt(officeData.maximumCapacity),
+        color: officeData.officeColor
+      };
+
+      if (isEditing && existingOffice?.id) {
+        const response = await officeService.updateOffice(existingOffice.id, officeToSave);
+        console.log('Update response:', response);
+      } else {
+        const response = await officeService.createOffice(officeToSave);
+        console.log('Create response:', response);
+      }
+      
+      navigation.goBack();
+    } catch (error) {
+      console.error('Error saving office:', error);
+    }
   };
 
   return (
@@ -103,12 +117,12 @@ export const AddOffice = ({ route }: { route: any }) => {
         <Title text="Office Colour" />
         
         <View style={styles.colorGrid}>
-          {OFFICE_COLORS.map((color, index) => (
+          {(Object.keys(OFFICE_COLORS_MAP) as OfficeColorKey[]).map((colorKey) => (
             <ColorPicker
-              key={index}
-              color={color}
-              isSelected={officeData.officeColor === color}
-              onSelect={() => handleColorSelect(color)}
+              key={colorKey}
+              colorKey={colorKey}
+              isSelected={officeData.officeColor === colorKey}
+              onSelect={() => handleColorSelect(colorKey)}
             />
           ))}
         </View>

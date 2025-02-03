@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../atoms/Card';
 import { SearchBar } from '../atoms/SearchBar';
 import { StaffHeader } from '../atoms/StaffHeader';
-import UserListItem from '../atoms/UserListItem';
+import UserListItem from '../atoms/StaffListItem';
 import { ActionButton } from '../atoms/ActionButton';
 import { StaffModal } from '../molecules/StaffModal';
 import { AVATARS } from '../../config/uiConfig';
@@ -49,6 +49,7 @@ export const Office = () => {
   const { officeData } = route.params as RouteParams;
   const [searchQuery, setSearchQuery] = React.useState('');
   const [isModalVisible, setIsModalVisible] = React.useState(false);
+  const [selectedStaff, setSelectedStaff] = React.useState<typeof staffMembers[0] | null>(null);
 
   const filteredStaffMembers = React.useMemo(() => {
     if (!searchQuery.trim()) {
@@ -63,6 +64,23 @@ export const Office = () => {
   const handleAddStaff = (selectedAvatar: string) => {
     // Handle adding new staff member
     console.log('Adding staff with avatar:', selectedAvatar);
+    setIsModalVisible(false);
+  };
+
+  const handleStaffOptionsPress = (staff: typeof staffMembers[0]) => {
+    setSelectedStaff(staff);
+    setIsModalVisible(true);
+  };
+
+  const handleEditStaff = (staff: typeof staffMembers[0]) => {
+    // Handle edit logic here
+    console.log('Editing staff:', staff);
+    setIsModalVisible(false);
+  };
+
+  const handleDeleteStaff = (staff: typeof staffMembers[0]) => {
+    // Handle delete logic here
+    console.log('Deleting staff:', staff);
     setIsModalVisible(false);
   };
 
@@ -99,7 +117,7 @@ export const Office = () => {
                   key={staff.id}
                   name={staff.name}
                   avatarUrl={staff.avatar}
-                  onOptionsPress={() => console.log('Options pressed for:', staff.name)}
+                  onOptionsPress={() => handleStaffOptionsPress(staff)}
                 />
               ))
             ) : (
@@ -119,11 +137,16 @@ export const Office = () => {
 
       <StaffModal
         visible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
-        onPrimaryAction={handleAddStaff}
-        title="New Staff Member"
-        primaryButtonTitle="ADD STAFF MEMBER"
-        showBackButton={true}
+        onClose={() => {
+          setIsModalVisible(false);
+          setSelectedStaff(null);
+        }}
+        title={selectedStaff ? `Edit ${selectedStaff.name}` : "New Staff Member"}
+        onPrimaryAction={() => selectedStaff && handleEditStaff(selectedStaff)}
+        onSecondaryAction={() => selectedStaff && handleDeleteStaff(selectedStaff)}
+        primaryButtonTitle={selectedStaff ? "UPDATE STAFF MEMBER" : "ADD STAFF MEMBER"}
+        secondaryButtonTitle="DELETE STAFF MEMBER"
+        showBackButton={false}
       />
     </SafeAreaView>
   );

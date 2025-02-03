@@ -1,19 +1,20 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, View } from 'react-native';
+import { OFFICE_COLORS_MAP, OfficeColorKey } from '../../config/uiConfig';
 
 interface ColorPickerProps {
-  color: string;
+  colorKey: OfficeColorKey;
   isSelected: boolean;
   onSelect: () => void;
 }
 
-export const ColorPicker = ({ color, isSelected, onSelect }: ColorPickerProps) => {
+export const ColorPicker = ({ colorKey, isSelected, onSelect }: ColorPickerProps) => {
   return (
     <TouchableOpacity
       onPress={onSelect}
       style={[styles.container, isSelected && styles.selectedContainer]}
     >
-      <View style={[styles.colorCircle, { backgroundColor: color }]} />
+      <View style={[styles.colorCircle, { backgroundColor: OFFICE_COLORS_MAP[colorKey] }]} />
     </TouchableOpacity>
   );
 };
@@ -28,7 +29,7 @@ const styles = StyleSheet.create({
     margin: 8,
   },
   selectedContainer: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#c0c0c0',
   },
   colorCircle: {
     width: 40,

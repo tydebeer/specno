@@ -8,7 +8,7 @@ interface Props {
   onOptionsPress: () => void;
 }
 
-const UserListItem: React.FC<Props> = ({
+const StaffListItem: React.FC<Props> = ({
   name,
   avatarUrl,
   onOptionsPress,
@@ -61,4 +61,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default UserListItem; 
+export default StaffListItem; 

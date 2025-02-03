@@ -3,7 +3,6 @@ import { StyleSheet, View, SafeAreaView, TouchableOpacity, Platform, StatusBar, 
 import { Title } from '../atoms';
 import { Card } from '../atoms/Card';
 import { ActionButton } from '../atoms/ActionButton';
-import { StaffModal } from '../molecules/StaffModal';
 
 // Dummy data for offices
 const dummyOffices = [
@@ -35,7 +34,7 @@ const dummyOffices = [
     email: 'hello@digitalspace.com',
     capacity: 20,
     address: '15 Beach Road, Sea Point, Cape Town, 8005',
-    color: '#4CAF50'
+    color: 'GREEN'
   },
   {
     id: '4',
@@ -45,7 +44,6 @@ const dummyOffices = [
     email: 'hello@digitalspace.com',
     capacity: 20,
     address: '15 Beach Road, Sea Point, Cape Town, 8005',
-
     color: '#4CAF50'
   },{
     id: '5',
@@ -55,7 +53,6 @@ const dummyOffices = [
     email: 'hello@digitalspace.com',
     capacity: 20,
     address: '15 Beach Road, Sea Point, Cape Town, 8005',
-
     color: '#4CAF50'
   },{
     id: '6',
@@ -65,25 +62,17 @@ const dummyOffices = [
     email: 'hello@digitalspace.com',
     capacity: 20,
     address: '15 Beach Road, Sea Point, Cape Town, 8005',
-
     color: '#4CAF50'
   },
 ];
 
 export const Home = ({ navigation }: { navigation: any }) => {
-  const [isModalVisible, setIsModalVisible] = useState(false);
-
   const handleCardPress = (office: typeof dummyOffices[0]) => {
     navigation.navigate('Office', { officeData: office });
   };
 
   const handleEditOffice = (office: typeof dummyOffices[0]) => {
     navigation.navigate('AddOffice', { officeData: office });
-  };
-
-  const handleAddStaff = (selectedAvatar: string) => {
-    console.log('Selected avatar:', selectedAvatar);
-    // Handle adding new staff member logic here
   };
 
   return (
@@ -118,14 +107,6 @@ export const Home = ({ navigation }: { navigation: any }) => {
           onPress={() => navigation.navigate('AddOffice')}
         />
       </View>
-
-      <StaffModal
-        visible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
-        onPrimaryAction={handleAddStaff}
-        title="Add Staff Member"
-        primaryButtonTitle="Add"
-      />
     </SafeAreaView>
   );
 };

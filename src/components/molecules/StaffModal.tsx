@@ -25,6 +25,8 @@ interface StaffModalProps {
   primaryButtonTitle: string;
   secondaryButtonTitle?: string;
   showBackButton?: boolean;
+  primaryButtonText?: string;
+  secondaryButtonText?: string;
 }
 
 export const StaffModal: React.FC<StaffModalProps> = ({
@@ -36,6 +38,8 @@ export const StaffModal: React.FC<StaffModalProps> = ({
   primaryButtonTitle,
   secondaryButtonTitle,
   showBackButton = true,
+  primaryButtonText,
+  secondaryButtonText,
 }) => {
   const [selectedAvatarIndex, setSelectedAvatarIndex] = useState<number | null>(null);
   const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
@@ -46,16 +50,26 @@ export const StaffModal: React.FC<StaffModalProps> = ({
       animationType="fade"
       transparent={true}
     >
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
+      <TouchableOpacity 
+        style={styles.overlay} 
+        activeOpacity={1} 
+        onPress={onClose}
+      >
+        <TouchableOpacity 
+          style={styles.modalContainer} 
+          activeOpacity={1}
+          onPress={(e) => e.stopPropagation()}
+        >
           <View style={styles.header}>
-            {showBackButton && (
+            {showBackButton ? (
               <TouchableOpacity 
                 onPress={onClose}
                 style={styles.backButton}
               >
                 <Ionicons name="arrow-back" size={24} color="#000" />
               </TouchableOpacity>
+            ) : (
+              <View style={styles.backButton} />
             )}
             <Text style={styles.title}>{title}</Text>
             <TouchableOpacity 
@@ -83,20 +97,22 @@ export const StaffModal: React.FC<StaffModalProps> = ({
           </View>
 
           <View style={styles.buttonContainer}>
-            <PrimaryButton
-              title={primaryButtonTitle}
-              onPress={() => selectedAvatar && onPrimaryAction(selectedAvatar)}
-              disabled={!selectedAvatar}
-            />
-            {secondaryButtonTitle && onSecondaryAction && (
+            {primaryButtonText && (
+              <PrimaryButton
+                title={primaryButtonTitle}
+                onPress={() => selectedAvatar && onPrimaryAction(selectedAvatar)}
+                disabled={!selectedAvatar}
+              />
+            )}
+            {secondaryButtonText && secondaryButtonTitle && onSecondaryAction && (
               <SecondaryButton
                 title={secondaryButtonTitle}
                 onPress={onSecondaryAction}
               />
             )}
           </View>
-        </View>
-      </View>
+        </TouchableOpacity>
+      </TouchableOpacity>
     </Modal>
   );
 };
@@ -138,6 +154,8 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     color: '#000',
+    flex: 1,
+    textAlign: 'center',
   },
   sectionTitle: {
     fontSize: 28,
