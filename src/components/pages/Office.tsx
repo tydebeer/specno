@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, SafeAreaView, TouchableOpacity, Text } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,8 +8,8 @@ import { StaffHeader } from '../atoms/StaffHeader';
 import UserListItem from '../atoms/StaffListItem';
 import { ActionButton } from '../atoms/ActionButton';
 import { StaffModal } from '../molecules/StaffModal';
-import { AVATARS } from '../../config/uiConfig';
 import { StaffData } from '../../interfaces/StaffData';
+import { staffService } from '../../services/staffService';
 
 
 type RouteParams = {
@@ -22,18 +22,28 @@ type RouteParams = {
     maximumCapacity: number;
     officeColor: string;
   };
+  staffMembers: StaffData[];
 };
 
 export const Office = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { officeData } = route.params as RouteParams;
+  const { officeData, staffMembers: initialStaffMembers } = route.params as RouteParams;
+  const [staffMembers, setStaffMembers] = useState<StaffData[]>(initialStaffMembers);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [isModalVisible, setIsModalVisible] = React.useState(false);
   const [selectedStaff, setSelectedStaff] = React.useState<StaffData | null>(null);
   const [modalMode, setModalMode] = useState<'add' | 'edit' | 'delete'>('add');
 
-  const staffMembers: StaffData[] = [];
+  useEffect(() => {
+    // Subscribe to staff updates
+    const unsubscribe = staffService.subscribeToStaff((updatedStaff) => {
+      const officeStaff = updatedStaff.filter(staff => staff.officeId === officeData.id);
+      setStaffMembers(officeStaff);
+    });
+
+    return () => unsubscribe();
+  }, [officeData.id]);
 
   const filteredStaffMembers = React.useMemo(() => {
     if (!searchQuery.trim()) {
@@ -44,62 +54,54 @@ export const Office = () => {
       staff.firstName.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
       staff.lastName.toLowerCase().includes(searchQuery.toLowerCase().trim())
     );
-  }, [searchQuery]);
-
-  const handleAddStaff = (staffData: Omit<StaffData, 'id'>) => {
-    const newStaff: StaffData = {
-      id: Date.now().toString(),
-      ...staffData
-    };
-    
-    console.log('Adding staff:', newStaff);
-    setIsModalVisible(false);
-  };
+  }, [searchQuery, staffMembers]);
 
   const handleStaffOptionsPress = (staff: typeof staffMembers[0]) => {
     setSelectedStaff(staff);
     setIsModalVisible(true);
   };
 
-  const handleEditStaff = (staff: typeof staffMembers[0]) => {
-    // Handle edit logic here
-    console.log('Editing staff:', staff);
-    setIsModalVisible(false);
-  };
-
-  const handleDeleteStaff = (staff: typeof staffMembers[0]) => {
-    // Handle delete logic here
-    console.log('Deleting staff:', staff);
-    setIsModalVisible(false);
-  };
-
-  const handleModalAction = (data?: any) => {
-    switch (modalMode) {
-      case 'add':
-        const avatarKeys = Object.keys(AVATARS);
-        const newStaff = {
-          id: Date.now().toString(),
-          ...data,
-          avatar: AVATARS[avatarKeys[Math.floor(Math.random() * avatarKeys.length)] as keyof typeof AVATARS],
-          isInOffice: false,
-        };
-        // Add staff logic
-        console.log('Adding staff:', newStaff);
-        break;
+  const handleModalAction = async (data?: any) => {
+    try {
+      switch (modalMode) {
+        case 'add':
+          const newStaff: Omit<StaffData, 'id'> = {
+            firstName: data.firstName,
+            lastName: data.lastName,
+            avatar: data.avatar,
+            isInOffice: true,
+            officeId: officeData.id || '',
+          };
+          await staffService.createStaff(newStaff);
+          break;
+        
+        case 'edit':
+          if (selectedStaff?.id) {
+            const updatedStaff: Partial<StaffData> = {
+              firstName: data.firstName,
+              lastName: data.lastName,
+              avatar: data.avatar,
+              isInOffice: selectedStaff.isInOffice,
+              officeId: officeData.id || '',
+            };
+            await staffService.updateStaff(selectedStaff.id, updatedStaff);
+          }
+          break;
+        
+        case 'delete':
+          if (selectedStaff?.id) {
+            await staffService.deleteStaff(selectedStaff.id);
+          }
+          break;
+      }
       
-      case 'edit':
-        // Edit staff logic
-        console.log('Editing staff:', data);
-        break;
+      setIsModalVisible(false);
+      setSelectedStaff(null);
       
-      case 'delete':
-        // Delete staff logic
-        console.log('Deleting staff:', selectedStaff);
-        break;
+    } catch (error) {
+      console.error('Error handling staff action:', error);
+      // You might want to show an error message to the user here
     }
-    
-    setIsModalVisible(false);
-    setSelectedStaff(null);
   };
 
   return (
@@ -142,7 +144,7 @@ export const Office = () => {
                   <UserListItem
                     key={staff.id}
                     name={`${staff.firstName} ${staff.lastName}`}
-                    avatarUrl={staff.avatar}
+                    avatar={staff.avatar}
                     isInOffice={staff.isInOffice}
                     onOptionsPress={() => handleStaffOptionsPress(staff)}
                   />
@@ -170,7 +172,10 @@ export const Office = () => {
             ) : (
               <View style={styles.noResultsContainer}>
                 <Text style={styles.noResultsText}>
-                  No staff members found matching "{searchQuery}"
+                  {staffMembers.length > 0 
+                    ? `No staff members found matching "${searchQuery}"`
+                    : "No staff members"
+                  }
                 </Text>
               </View>
             )}

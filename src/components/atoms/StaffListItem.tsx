@@ -4,14 +4,14 @@ import { Feather } from '@expo/vector-icons';
 
 interface Props {
   name: string;
-  avatarUrl: any;
+  avatar: any;
   isInOffice: boolean;
   onOptionsPress: () => void;
 }
 
 const StaffListItem: React.FC<Props> = ({
   name,
-  avatarUrl,
+  avatar,
   isInOffice,
   onOptionsPress,
 }) => {
@@ -19,7 +19,7 @@ const StaffListItem: React.FC<Props> = ({
     <View style={styles.container}>
       <View style={styles.leftContent}>
         <Image 
-          source={typeof avatarUrl === 'string' ? { uri: avatarUrl } : avatarUrl}
+          source={typeof avatar === 'string' ? { uri: avatar } : avatar}
           style={styles.avatar}
         />
         <Text style={styles.name}>{name}</Text>

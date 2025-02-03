@@ -12,6 +12,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { PrimaryButton } from '../atoms/PrimaryButton';
 import { StaffData } from '../../interfaces/StaffData';
 import { InputField } from '../atoms/InputField';
+import { AvatarPicker } from '../atoms/AvatarPicker';
+import { AVATARS } from '../../config/uiConfig';
 
 const { width } = Dimensions.get('window');
 const MODAL_WIDTH = width * 0.85;
@@ -35,21 +37,49 @@ export const StaffModal: React.FC<StaffModalProps> = ({
   onSubmit,
   onDelete,
 }) => {
+  const defaultAvatar = AVATARS[Object.keys(AVATARS)[0] as keyof typeof AVATARS];
+  
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<Partial<StaffData>>(initialData || {
     firstName: '',
     lastName: '',
-    avatar: '',
+    avatar: defaultAvatar, // Set default avatar here
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const isDeleteMode = mode === 'delete';
+
+  const validateInputs = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.firstName?.trim()) {
+      newErrors.firstName = 'First name is required';
+    }
+    
+    if (!formData.lastName?.trim()) {
+      newErrors.lastName = 'Last name is required';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (field: keyof StaffData, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
 
   const handleClose = () => {
     setCurrentStep(0);
     setFormData({
       firstName: '',
       lastName: '',
-      avatar: '',
+      avatar: defaultAvatar,
     });
     onClose();
   };
@@ -73,13 +103,15 @@ export const StaffModal: React.FC<StaffModalProps> = ({
         <View style={styles.stepContent}>
           <InputField
             value={formData.firstName || ''}
-            onChangeText={(text) => setFormData((prev) => ({ ...prev, firstName: text }))}
+            onChangeText={(text) => handleInputChange('firstName', text)}
             placeholder="First Name"
+            error={errors.firstName}
           />
           <InputField
             value={formData.lastName || ''}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, lastName: text }))}
+            onChangeText={(text) => handleInputChange('lastName', text)}
             placeholder="Last Name"
+            error={errors.lastName}
           />
         </View>
       )
@@ -87,12 +119,18 @@ export const StaffModal: React.FC<StaffModalProps> = ({
     {
       content: (
         <View style={styles.stepContent}>
-          <InputField
-            value={formData.avatar || ''}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, email: text }))}
-            placeholder="Email"
-            keyboardType="email-address"
-          />
+          <Text style={styles.stepTitle}>Choose an Avatar</Text>
+          <View style={styles.avatarGrid}>
+            {(Object.keys(AVATARS) as Array<keyof typeof AVATARS>).map((avatarKey, index) => (
+              <AvatarPicker
+                key={avatarKey}
+                avatarKey={avatarKey}
+                isSelected={formData.avatar === AVATARS[avatarKey]}
+                onSelect={() => setFormData(prev => ({ ...prev, avatar: AVATARS[avatarKey] }))}
+                index={index}
+              />
+            ))}
+          </View>
         </View>
       )
     }
@@ -105,6 +143,10 @@ export const StaffModal: React.FC<StaffModalProps> = ({
       return;
     }
 
+    if (currentStep === 0 && !validateInputs()) {
+      return;
+    }
+
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -112,7 +154,7 @@ export const StaffModal: React.FC<StaffModalProps> = ({
       setFormData({
         firstName: '',
         lastName: '',
-        avatar: '',
+        avatar: defaultAvatar, // Reset to default avatar when submitting
       });
       setCurrentStep(0);
       handleClose();
@@ -134,7 +176,10 @@ export const StaffModal: React.FC<StaffModalProps> = ({
 
   const getButtonText = () => {
     if (isDeleteMode) return 'Delete';
-    return currentStep === steps.length - 1 ? 'Save' : 'Next';
+    if (mode === 'add') {
+      return currentStep === steps.length - 1 ? 'Add Staff Member' : 'Next';
+    }
+    return currentStep === steps.length - 1 ? 'Save Changes' : 'Next';
   };
 
   return (
@@ -148,11 +193,7 @@ export const StaffModal: React.FC<StaffModalProps> = ({
         activeOpacity={1} 
         onPress={handleClose}
       >
-        <TouchableOpacity 
-          style={styles.modalContainer} 
-          activeOpacity={1}
-          onPress={(e) => e.stopPropagation()}
-        >
+        <View style={styles.modalContainer}>
           <View style={styles.header}>
             <TouchableOpacity 
               onPress={() => currentStep > 0 ? setCurrentStep(currentStep - 1) : handleClose()}
@@ -173,30 +214,34 @@ export const StaffModal: React.FC<StaffModalProps> = ({
             </TouchableOpacity>
           </View>
 
-          <View style={styles.content}>
+          <View style={styles.mainContent}>
             {steps[currentStep].content}
           </View>
 
-          <View style={styles.stepIndicator}>
-            {steps.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.dot,
-                  currentStep === index && styles.activeDot
-                ]}
+          <View style={styles.footer}>
+            {steps.length > 1 && (
+              <View style={styles.stepIndicator}>
+                {steps.map((_, index) => (
+                  <View
+                    key={index}
+                    style={[
+                      styles.dot,
+                      currentStep === index && styles.activeDot
+                    ]}
+                  />
+                ))}
+              </View>
+            )}
+            
+            <View style={styles.buttonContainer}>
+              <PrimaryButton
+                title={getButtonText()}
+                onPress={handleNext}
+                variant={mode === 'delete' ? 'delete' : 'primary'}
               />
-            ))}
+            </View>
           </View>
-
-          <View style={styles.buttonContainer}>
-            <PrimaryButton
-              title={getButtonText()}
-              onPress={handleNext}
-              variant={mode === 'delete' ? 'delete' : 'primary'}
-            />
-          </View>
-        </TouchableOpacity>
+        </View>
       </TouchableOpacity>
     </Modal>
   );
@@ -211,17 +256,38 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: MODAL_WIDTH,
+    height: '90%',
     backgroundColor: '#fff',
     borderRadius: 20,
     padding: 20,
-    maxHeight: '80%',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    height: 56,
-    marginBottom: 24,
+  },
+  mainContent: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingVertical: 20,
+  },
+  footer: {
+    gap: 16,
+  },
+  scrollContainer: {
+    flexGrow: 1, // Allows scrolling if content overflows
+    justifyContent: 'center', // Centers content vertically if there's space
+  },
+  stepIndicator: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  buttonContainer: {
+    width: '100%',
   },
   closeButton: {
     width: 40,
@@ -235,30 +301,6 @@ const styles = StyleSheet.create({
     color: '#000',
     flex: 1,
     textAlign: 'center',
-  },
-  content: {
-    flex: 1,
-    width: '100%',
-  },
-  stepIndicator: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginVertical: 20,
-    gap: 8,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#E0E0E0',
-  },
-  activeDot: {
-    backgroundColor: '#2196F3',
-  },
-  buttonContainer: {
-    width: '100%',
-    marginTop: 16,
   },
   deleteContent: {
     padding: 20,
@@ -279,8 +321,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#DC3545',
   },
   stepContent: {
-    padding: 16,
-    gap: 16,
+    flexDirection: 'column', // Ensures inputs stack vertically
+    gap: 20, // Adds spacing between inputs
+    width: '100%', // Prevents shrinking
   },
   input: {
     borderWidth: 1,
@@ -288,5 +331,27 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     width: '100%',
+  },
+  activeDot: {
+    backgroundColor: '#2196F3',
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#E0E0E0',
+  },
+  stepTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  avatarGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    width: '100%',
+    paddingHorizontal: 0,
   },
 }); 
