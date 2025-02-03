@@ -1,4 +1,5 @@
-import database from '@react-native-firebase/database';
+import { getDatabase, ref, push, set, get, query, orderByChild, equalTo, update, remove, onValue, off } from 'firebase/database';
+import { database } from '../config/firebase';
 
 export interface Staff {
   id?: string;
@@ -10,8 +11,9 @@ export interface Staff {
 export const staffService = {
   async createStaff(staffData: Omit<Staff, 'id'>): Promise<string> {
     try {
-      const newRef = database().ref('staff').push();
-      await newRef.set(staffData);
+      const staffRef = ref(database, 'staff');
+      const newRef = push(staffRef);
+      await set(newRef, staffData);
       return newRef.key!;
     } catch (error) {
       console.error('Error creating staff:', error);
@@ -21,9 +23,8 @@ export const staffService = {
   
   async getStaff(staffId: string): Promise<Staff | null> {
     try {
-      const snapshot = await database()
-        .ref(`staff/${staffId}`)
-        .once('value');
+      const staffRef = ref(database, `staff/${staffId}`);
+      const snapshot = await get(staffRef);
       
       if (!snapshot.exists()) return null;
       
@@ -39,9 +40,8 @@ export const staffService = {
   
   async getAllStaff(): Promise<Staff[]> {
     try {
-      const snapshot = await database()
-        .ref('staff')
-        .once('value');
+      const staffRef = ref(database, 'staff');
+      const snapshot = await get(staffRef);
       
       const staffMembers: Staff[] = [];
       snapshot.forEach((childSnapshot) => {
@@ -49,7 +49,6 @@ export const staffService = {
           id: childSnapshot.key,
           ...childSnapshot.val()
         } as Staff);
-        return true;
       });
       return staffMembers;
     } catch (error) {
@@ -60,11 +59,9 @@ export const staffService = {
   
   async getStaffByOffice(officeId: string): Promise<Staff[]> {
     try {
-      const snapshot = await database()
-        .ref('staff')
-        .orderByChild('officeId')
-        .equalTo(officeId)
-        .once('value');
+      const staffRef = ref(database, 'staff');
+      const staffQuery = query(staffRef, orderByChild('officeId'), equalTo(officeId));
+      const snapshot = await get(staffQuery);
       
       const staffMembers: Staff[] = [];
       snapshot.forEach((childSnapshot) => {
@@ -72,7 +69,6 @@ export const staffService = {
           id: childSnapshot.key,
           ...childSnapshot.val()
         } as Staff);
-        return true;
       });
       return staffMembers;
     } catch (error) {
@@ -84,9 +80,8 @@ export const staffService = {
   async updateStaff(staffId: string, staffData: Partial<Staff>): Promise<void> {
     try {
       const { id, ...updateData } = staffData;
-      await database()
-        .ref(`staff/${staffId}`)
-        .update(updateData);
+      const staffRef = ref(database, `staff/${staffId}`);
+      await update(staffRef, updateData);
     } catch (error) {
       console.error('Error updating staff:', error);
       throw error;
@@ -95,9 +90,8 @@ export const staffService = {
   
   async deleteStaff(staffId: string): Promise<void> {
     try {
-      await database()
-        .ref(`staff/${staffId}`)
-        .remove();
+      const staffRef = ref(database, `staff/${staffId}`);
+      await remove(staffRef);
     } catch (error) {
       console.error('Error deleting staff:', error);
       throw error;
@@ -105,20 +99,19 @@ export const staffService = {
   },
   
   subscribeToStaff(callback: (staff: Staff[]) => void) {
-    const staffRef = database().ref('staff');
+    const staffRef = ref(database, 'staff');
     
-    staffRef.on('value', (snapshot) => {
+    onValue(staffRef, (snapshot) => {
       const staffMembers: Staff[] = [];
       snapshot.forEach((childSnapshot) => {
         staffMembers.push({
           id: childSnapshot.key,
           ...childSnapshot.val()
         } as Staff);
-        return true;
       });
       callback(staffMembers);
     });
 
-    return () => staffRef.off();
+    return () => off(staffRef);
   },
 }; 

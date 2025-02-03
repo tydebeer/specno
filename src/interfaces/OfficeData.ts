@@ -1,10 +1,10 @@
-import { OfficeColorKey } from "../config/uiConfig";
-
 export interface OfficeData {
+  id: string;
   officeName: string;
   physicalAddress: string;
   emailAddress: string;
   phoneNumber: string;
-  maximumCapacity: string;
-  officeColor: OfficeColorKey;
+  maximumCapacity: number;
+  officeColor: string;
+  staffCount: number;
 }

@@ -1,77 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, SafeAreaView, TouchableOpacity, Platform, StatusBar, ScrollView } from 'react-native';
 import { Title } from '../atoms';
 import { Card } from '../atoms/Card';
 import { ActionButton } from '../atoms/ActionButton';
-
-// Dummy data for offices
-const dummyOffices = [
-  {
-    id: '1',
-    companyName: 'Specno',
-    staffCount: 5,
-    phoneNumber: '082 364 9864',
-    email: 'info@specno.com',
-    capacity: 25,
-    address: '10 Willie Van Schoor Dr, Bo Oakdale, Cape Town, 7530',
-    color: '#2F80ED'
-  },
-  {
-    id: '2',
-    companyName: 'Tech Hub',
-    staffCount: 12,
-    phoneNumber: '083 555 1234',
-    email: 'contact@techhub.com',
-    capacity: 30,
-    address: '42 Innovation Street, Sandton, Johannesburg, 2196',
-    color: '#FF6B6B'
-  },
-  {
-    id: '3',
-    companyName: 'Digital Space',
-    staffCount: 8,
-    phoneNumber: '084 777 8899',
-    email: 'hello@digitalspace.com',
-    capacity: 20,
-    address: '15 Beach Road, Sea Point, Cape Town, 8005',
-    color: 'GREEN'
-  },
-  {
-    id: '4',
-    companyName: 'Digital Space',
-    staffCount: 8,
-    phoneNumber: '084 777 8899',
-    email: 'hello@digitalspace.com',
-    capacity: 20,
-    address: '15 Beach Road, Sea Point, Cape Town, 8005',
-    color: '#4CAF50'
-  },{
-    id: '5',
-    companyName: 'Digital Space',
-    staffCount: 8,
-    phoneNumber: '084 777 8899',
-    email: 'hello@digitalspace.com',
-    capacity: 20,
-    address: '15 Beach Road, Sea Point, Cape Town, 8005',
-    color: '#4CAF50'
-  },{
-    id: '6',
-    companyName: 'Digital Space',
-    staffCount: 8,
-    phoneNumber: '084 777 8899',
-    email: 'hello@digitalspace.com',
-    capacity: 20,
-    address: '15 Beach Road, Sea Point, Cape Town, 8005',
-    color: '#4CAF50'
-  },
-];
+import { officeService } from '../../services/officeService';
+import { OfficeData } from '../../interfaces/OfficeData';
+import { LoadingSpinner } from '../atoms/LoadingSpinner';
 
 export const Home = ({ navigation }: { navigation: any }) => {
-  const handleCardPress = (office: typeof dummyOffices[0]) => {
+  const [offices, setOffices] = useState<OfficeData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOffices = async () => {
+      try {
+        const fetchedOffices = await officeService.getAllOffices();
+        setOffices(fetchedOffices);
+      } catch (error) {
+        console.error('Error fetching offices:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOffices();
+  }, []);
+
+  const handleCardPress = (office: OfficeData) => {
     navigation.navigate('Office', { officeData: office });
   };
 
-  const handleEditOffice = (office: typeof dummyOffices[0]) => {
+  const handleEditOffice = (office: OfficeData) => {
     navigation.navigate('AddOffice', { officeData: office });
   };
 
@@ -81,25 +40,35 @@ export const Home = ({ navigation }: { navigation: any }) => {
       
       <ScrollView 
         style={styles.scrollView}
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={[styles.listContainer, offices.length === 0 && !loading && styles.emptyContainer]}
         showsVerticalScrollIndicator={false}
       >
-        {dummyOffices.map(office => (
-          <TouchableOpacity 
-            key={office.id}
-            onPress={() => handleCardPress(office)}
-          >
-            <Card
-              companyName={office.companyName}
-              staffCount={office.staffCount}
-              phoneNumber={office.phoneNumber}
-              email={office.email}
-              capacity={office.capacity}
-              address={office.address}
-              onEdit={() => handleEditOffice(office)}
-            />
-          </TouchableOpacity>
-        ))}
+        {loading ? (
+          <View style={styles.emptyStateContainer}>
+            <LoadingSpinner />
+          </View>
+        ) : offices.length === 0 ? (
+          <View style={styles.emptyStateContainer}>
+            <Title text="No offices found" />
+          </View>
+        ) : (
+          offices.map(office => (
+            <TouchableOpacity 
+              key={office.id}
+              onPress={() => handleCardPress(office)}
+            >
+              <Card
+                companyName={office.officeName}
+                staffCount={office.maximumCapacity || 0}
+                phoneNumber={office.phoneNumber}
+                email={office.emailAddress}
+                capacity={office.maximumCapacity}
+                address={office.physicalAddress}
+                onEdit={() => handleEditOffice(office)}
+              />
+            </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
 
       <View style={styles.buttonContainer}>
@@ -129,5 +98,17 @@ const styles = StyleSheet.create({
     bottom: 24,
     right: 24,
     zIndex: 1,
+  },
+  emptyContainer: {
+    flex: 1,
+  },
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#666',
   },
 }); 

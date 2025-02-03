@@ -1,101 +1,37 @@
-import database from '@react-native-firebase/database';
+import { database } from '../config/firebase';
+import { ref, get, set, update, remove, push } from 'firebase/database';
+import { OfficeData } from '../interfaces/OfficeData';
 
-export interface Office {
-  id?: string;
-  name: string;
-  address: string;
-  capacity: number;
-}
+const COLLECTION_NAME = 'offices';
 
 export const officeService = {
-  async createOffice(officeData: Omit<Office, 'id'>): Promise<string> {
-    try {
-      const newRef = database().ref('offices').push();
-      await newRef.set(officeData);
-      return newRef.key!;
-    } catch (error) {
-      console.error('Error creating office:', error);
-      throw error;
-    }
+  async getAllOffices(): Promise<OfficeData[]> {
+    const officesRef = ref(database, COLLECTION_NAME);
+    const snapshot = await get(officesRef);
+    if (!snapshot.exists()) return [];
+    return Object.entries(snapshot.val()).map(([id, data]) => ({
+      id,
+      ...(data as object)
+    })) as OfficeData[];
   },
-  
-  async getOffice(officeId: string): Promise<Office | null> {
-    try {
-      const snapshot = await database()
-        .ref(`offices/${officeId}`)
-        .once('value');
-      
-      if (!snapshot.exists()) return null;
-      
-      return {
-        id: snapshot.key,
-        ...snapshot.val()
-      } as Office;
-    } catch (error) {
-      console.error('Error getting office:', error);
-      throw error;
-    }
-  },
-  
-  async getAllOffices(): Promise<Office[]> {
-    try {
-      const snapshot = await database()
-        .ref('offices')
-        .once('value');
-      
-      const offices: Office[] = [];
-      snapshot.forEach((childSnapshot) => {
-        offices.push({
-          id: childSnapshot.key,
-          ...childSnapshot.val()
-        } as Office);
-        return true;
-      });
-      return offices;
-    } catch (error) {
-      console.error('Error getting all offices:', error);
-      throw error;
-    }
-  },
-  
-  async updateOffice(officeId: string, officeData: Partial<Office>): Promise<void> {
-    try {
-      const { id, ...updateData } = officeData;
-      await database()
-        .ref(`offices/${officeId}`)
-        .update(updateData);
-    } catch (error) {
-      console.error('Error updating office:', error);
-      throw error;
-    }
-  },
-  
-  async deleteOffice(officeId: string): Promise<void> {
-    try {
-      await database()
-        .ref(`offices/${officeId}`)
-        .remove();
-    } catch (error) {
-      console.error('Error deleting office:', error);
-      throw error;
-    }
-  },
-  
-  subscribeToOffices(callback: (offices: Office[]) => void) {
-    const officesRef = database().ref('offices');
-    
-    officesRef.on('value', (snapshot) => {
-      const offices: Office[] = [];
-      snapshot.forEach((childSnapshot) => {
-        offices.push({
-          id: childSnapshot.key,
-          ...childSnapshot.val()
-        } as Office);
-        return true;
-      });
-      callback(offices);
-    });
 
-    return () => officesRef.off();
+  async createOffice(officeData: Omit<OfficeData, 'id'>): Promise<OfficeData> {
+    const officesRef = ref(database, COLLECTION_NAME);
+    const newOfficeRef = push(officesRef);
+    await set(newOfficeRef, officeData);
+    return {
+      id: newOfficeRef.key!,
+      ...officeData
+    };
   },
+
+  async updateOffice(id: string, officeData: Partial<OfficeData>): Promise<void> {
+    const officeRef = ref(database, `${COLLECTION_NAME}/${id}`);
+    await update(officeRef, officeData);
+  },
+
+  async deleteOffice(id: string): Promise<void> {
+    const officeRef = ref(database, `${COLLECTION_NAME}/${id}`);
+    await remove(officeRef);
+  }
 }; 

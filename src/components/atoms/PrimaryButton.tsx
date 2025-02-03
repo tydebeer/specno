@@ -5,16 +5,22 @@ interface PrimaryButtonProps {
   title: string;
   onPress: () => void;
   disabled?: boolean;
+  variant?: 'primary' | 'delete';
 }
 
 export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   title,
   onPress,
   disabled = false,
+  variant = 'primary',
 }) => {
   return (
     <TouchableOpacity 
-      style={[styles.button, disabled && styles.disabled]} 
+      style={[
+        styles.button, 
+        variant === 'delete' && styles.deleteButton,
+        disabled && styles.disabled
+      ]} 
       onPress={onPress}
       disabled={disabled}
     >
@@ -32,6 +38,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginVertical: 16,
+  },
+  deleteButton: {
+    backgroundColor: '#F44336',
   },
   buttonText: {
     color: '#FFF',

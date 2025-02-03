@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, SafeAreaView, TouchableOpacity, Text } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,39 +9,20 @@ import UserListItem from '../atoms/StaffListItem';
 import { ActionButton } from '../atoms/ActionButton';
 import { StaffModal } from '../molecules/StaffModal';
 import { AVATARS } from '../../config/uiConfig';
+import { StaffData } from '../../interfaces/StaffData';
 
 
 type RouteParams = {
   officeData: {
-    companyName: string;
-    staffCount: number;
+    id?: string;
+    officeName: string;
+    physicalAddress: string;
+    emailAddress: string;
     phoneNumber: string;
-    email: string;
-    capacity: number;
-    address: string;
-    color: string;
+    maximumCapacity: number;
+    officeColor: string;
   };
 };
-
-// Dummy staff data
-const staffMembers = [
-  {
-    id: '1',
-    name: 'Jacques Jordaan',
-    avatar: AVATARS.ASTRONAUT_WAVING,
-  },  
-  {
-    id: '2',
-    name: 'Sarah Smith',
-    avatar: AVATARS.ASTRONAUT_WAVING,
-  },
-  {
-    id: '3',
-    name: 'Mike Johnson',
-    avatar: require('../../../assets/avatars/avatar-1.png'),
-  },
-];
-
 
 export const Office = () => {
   const navigation = useNavigation();
@@ -49,7 +30,10 @@ export const Office = () => {
   const { officeData } = route.params as RouteParams;
   const [searchQuery, setSearchQuery] = React.useState('');
   const [isModalVisible, setIsModalVisible] = React.useState(false);
-  const [selectedStaff, setSelectedStaff] = React.useState<typeof staffMembers[0] | null>(null);
+  const [selectedStaff, setSelectedStaff] = React.useState<StaffData | null>(null);
+  const [modalMode, setModalMode] = useState<'add' | 'edit' | 'delete'>('add');
+
+  const staffMembers: StaffData[] = [];
 
   const filteredStaffMembers = React.useMemo(() => {
     if (!searchQuery.trim()) {
@@ -57,13 +41,18 @@ export const Office = () => {
     }
     
     return staffMembers.filter(staff => 
-      staff.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+      staff.firstName.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+      staff.lastName.toLowerCase().includes(searchQuery.toLowerCase().trim())
     );
   }, [searchQuery]);
 
-  const handleAddStaff = (selectedAvatar: string) => {
-    // Handle adding new staff member
-    console.log('Adding staff with avatar:', selectedAvatar);
+  const handleAddStaff = (staffData: Omit<StaffData, 'id'>) => {
+    const newStaff: StaffData = {
+      id: Date.now().toString(),
+      ...staffData
+    };
+    
+    console.log('Adding staff:', newStaff);
     setIsModalVisible(false);
   };
 
@@ -84,6 +73,35 @@ export const Office = () => {
     setIsModalVisible(false);
   };
 
+  const handleModalAction = (data?: any) => {
+    switch (modalMode) {
+      case 'add':
+        const avatarKeys = Object.keys(AVATARS);
+        const newStaff = {
+          id: Date.now().toString(),
+          ...data,
+          avatar: AVATARS[avatarKeys[Math.floor(Math.random() * avatarKeys.length)] as keyof typeof AVATARS],
+          isInOffice: false,
+        };
+        // Add staff logic
+        console.log('Adding staff:', newStaff);
+        break;
+      
+      case 'edit':
+        // Edit staff logic
+        console.log('Editing staff:', data);
+        break;
+      
+      case 'delete':
+        // Delete staff logic
+        console.log('Deleting staff:', selectedStaff);
+        break;
+    }
+    
+    setIsModalVisible(false);
+    setSelectedStaff(null);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -99,7 +117,14 @@ export const Office = () => {
       </View>
 
       <View style={styles.content}>
-        <Card {...officeData} />
+        <Card 
+          companyName={officeData.officeName}
+          staffCount={staffMembers.length}
+          phoneNumber={officeData.phoneNumber}
+          email={officeData.emailAddress}
+          capacity={officeData.maximumCapacity}
+          address={officeData.physicalAddress}
+        />
         
         <View style={styles.staffSection}>
           <SearchBar 
@@ -113,12 +138,34 @@ export const Office = () => {
           <View style={styles.staffList}>
             {filteredStaffMembers.length > 0 ? (
               filteredStaffMembers.map(staff => (
-                <UserListItem
-                  key={staff.id}
-                  name={staff.name}
-                  avatarUrl={staff.avatar}
-                  onOptionsPress={() => handleStaffOptionsPress(staff)}
-                />
+                <>
+                  <UserListItem
+                    key={staff.id}
+                    name={`${staff.firstName} ${staff.lastName}`}
+                    avatarUrl={staff.avatar}
+                    isInOffice={staff.isInOffice}
+                    onOptionsPress={() => handleStaffOptionsPress(staff)}
+                  />
+                  <TouchableOpacity
+                    onPress={() => {
+                      setModalMode('edit');
+                      setSelectedStaff(staff);
+                      setIsModalVisible(true);
+                    }}
+                  >
+                    <Text>Edit</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    onPress={() => {
+                      setModalMode('delete');
+                      setSelectedStaff(staff);
+                      setIsModalVisible(true);
+                    }}
+                  >
+                    <Text>Delete</Text>
+                  </TouchableOpacity>
+                </>
               ))
             ) : (
               <View style={styles.noResultsContainer}>
@@ -132,7 +179,10 @@ export const Office = () => {
       </View>
 
       <View style={styles.buttonContainer}>
-        <ActionButton onPress={() => setIsModalVisible(true)} />
+        <ActionButton onPress={() => {
+          setModalMode('add');
+          setIsModalVisible(true);
+        }} />
       </View>
 
       <StaffModal
@@ -140,13 +190,13 @@ export const Office = () => {
         onClose={() => {
           setIsModalVisible(false);
           setSelectedStaff(null);
+          setModalMode('add');
         }}
-        title={selectedStaff ? `Edit ${selectedStaff.name}` : "New Staff Member"}
-        onPrimaryAction={() => selectedStaff && handleEditStaff(selectedStaff)}
-        onSecondaryAction={() => selectedStaff && handleDeleteStaff(selectedStaff)}
-        primaryButtonTitle={selectedStaff ? "UPDATE STAFF MEMBER" : "ADD STAFF MEMBER"}
-        secondaryButtonTitle="DELETE STAFF MEMBER"
-        showBackButton={false}
+        mode={modalMode}
+        type="staff"
+        initialData={modalMode === 'add' ? null : selectedStaff}
+        onSubmit={handleModalAction}
+        onDelete={handleModalAction}
       />
     </SafeAreaView>
   );

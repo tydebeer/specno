@@ -5,12 +5,14 @@ import { Feather } from '@expo/vector-icons';
 interface Props {
   name: string;
   avatarUrl: any;
+  isInOffice: boolean;
   onOptionsPress: () => void;
 }
 
 const StaffListItem: React.FC<Props> = ({
   name,
   avatarUrl,
+  isInOffice,
   onOptionsPress,
 }) => {
   return (

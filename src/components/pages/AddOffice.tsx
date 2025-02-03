@@ -9,6 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 import { OFFICE_COLORS_MAP, OfficeColorKey } from '../../config/uiConfig';
 import { OfficeData } from '../../interfaces/OfficeData';
 import { officeService } from '../../services/officeService';
+import { validateEmail, validateSAPhoneNumber, validateCapacity } from '../../utils/validation';
 
 export const AddOffice = ({ route }: { route: any }) => {
   const navigation = useNavigation();
@@ -16,32 +17,61 @@ export const AddOffice = ({ route }: { route: any }) => {
   const isEditing = !!existingOffice;
 
   const [officeData, setOfficeData] = useState<OfficeData>({
+    id: '',
     officeName: '',
     physicalAddress: '',
     emailAddress: '',
     phoneNumber: '',
-    maximumCapacity: '',
-    officeColor: 'YELLOW'
+    maximumCapacity: 0,
+    officeColor: 'YELLOW',
+    staffCount: 0
   });
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (existingOffice) {
       setOfficeData({
+        id: existingOffice.id || '',
         officeName: existingOffice.companyName,
         physicalAddress: existingOffice.address,
         emailAddress: existingOffice.email,
         phoneNumber: existingOffice.phoneNumber,
-        maximumCapacity: existingOffice.capacity.toString(),
-        officeColor: existingOffice.color
+        maximumCapacity: existingOffice.capacity,
+        officeColor: existingOffice.color,
+        staffCount: existingOffice.staffCount
       });
     }
   }, [existingOffice]);
 
+  const validateInputs = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!officeData.officeName.trim()) newErrors.officeName = 'Office name is required';
+    if (!officeData.physicalAddress.trim()) newErrors.physicalAddress = 'Address is required';
+    
+    const phoneError = validateSAPhoneNumber(officeData.phoneNumber);
+    if (phoneError) newErrors.phoneNumber = phoneError;
+    
+    const emailError = validateEmail(officeData.emailAddress);
+    if (emailError) newErrors.emailAddress = emailError;
+    
+    const capacityError = validateCapacity(officeData.maximumCapacity);
+    if (capacityError) newErrors.maximumCapacity = capacityError;
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleInputChange = (field: string, value: string) => {
     setOfficeData(prev => ({
       ...prev,
-      [field]: value
+      [field]: field === 'maximumCapacity' ? parseInt(value) || 0 : value
     }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
   };
 
   const handleColorSelect = (color: OfficeColorKey) => {
@@ -52,14 +82,20 @@ export const AddOffice = ({ route }: { route: any }) => {
   };
 
   const handleAddOffice = async () => {
+    if (!validateInputs()) {
+      return;
+    }
+
     try {
       const officeToSave = {
-        name: officeData.officeName,
-        address: officeData.physicalAddress,
-        email: officeData.emailAddress,
+        id: officeData.id,
+        officeName: officeData.officeName,
+        physicalAddress: officeData.physicalAddress,
+        emailAddress: officeData.emailAddress,
         phoneNumber: officeData.phoneNumber,
-        capacity: parseInt(officeData.maximumCapacity),
-        color: officeData.officeColor
+        maximumCapacity: officeData.maximumCapacity,
+        officeColor: officeData.officeColor,
+        staffCount: officeData.staffCount
       };
 
       if (isEditing && existingOffice?.id) {
@@ -88,30 +124,37 @@ export const AddOffice = ({ route }: { route: any }) => {
           placeholder="Office Name"
           value={officeData.officeName}
           onChangeText={(text) => handleInputChange('officeName', text)}
+          error={errors.officeName}
         />
 
         <InputField
           placeholder="Physical Address"
           value={officeData.physicalAddress}
           onChangeText={(text) => handleInputChange('physicalAddress', text)}
+          error={errors.physicalAddress}
         />
 
         <InputField
           placeholder="Email Address"
           value={officeData.emailAddress}
           onChangeText={(text) => handleInputChange('emailAddress', text)}
+          error={errors.emailAddress}
         />
 
         <InputField
           placeholder="Phone Number"
           value={officeData.phoneNumber}
           onChangeText={(text) => handleInputChange('phoneNumber', text)}
+          error={errors.phoneNumber}
         />
 
         <InputField
           placeholder="Maximum Capacity"
-          value={officeData.maximumCapacity}
+          value={officeData.maximumCapacity.toString()}
           onChangeText={(text) => handleInputChange('maximumCapacity', text)}
+          error={errors.maximumCapacity}
+          keyboardType="numeric"
+          returnKeyType="done"
         />
 
         <Title text="Office Colour" />

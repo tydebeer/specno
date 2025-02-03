@@ -37,3 +37,8 @@ yarn-error.*
 
 # environment variables
 .env
+
+# Firebase credentials
+google-services.json
+GoogleService-Info.plist
+firebase.config.ts
