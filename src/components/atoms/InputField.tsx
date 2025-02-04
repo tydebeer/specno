@@ -37,11 +37,11 @@ export const InputField: React.FC<InputFieldProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    marginVertical: 8,
+    marginVertical: 6,
   },
   input: {
     width: '100%',
-    height: 50,
+    height: 45,
     backgroundColor: '#F5F5F5',
     borderRadius: 8,
     paddingHorizontal: 16,

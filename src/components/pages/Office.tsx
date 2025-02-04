@@ -10,23 +10,15 @@ import { ActionButton } from '../atoms/ActionButton';
 import { StaffModal } from '../molecules/StaffModal';
 import { StaffData } from '../../interfaces/StaffData';
 import { staffService } from '../../services/staffService';
-
+import { OFFICE_COLORS_MAP } from '../../config/uiConfig';
+import { OfficeData } from '../../interfaces/OfficeData';
 
 type RouteParams = {
-  officeData: {
-    id?: string;
-    officeName: string;
-    physicalAddress: string;
-    emailAddress: string;
-    phoneNumber: string;
-    maximumCapacity: number;
-    officeColor: string;
-  };
+  officeData: OfficeData;
   staffMembers: StaffData[];
 };
 
-export const Office = () => {
-  const navigation = useNavigation();
+export const Office = ({ navigation }: { navigation: any }) => {
   const route = useRoute();
   const { officeData, staffMembers: initialStaffMembers } = route.params as RouteParams;
   const [staffMembers, setStaffMembers] = useState<StaffData[]>(initialStaffMembers);
@@ -56,7 +48,12 @@ export const Office = () => {
     );
   }, [searchQuery, staffMembers]);
 
+  const handleEditOffice = (office: OfficeData) => {
+    navigation.navigate('AddOffice', { officeData: office });
+  };
+
   const handleStaffOptionsPress = (staff: typeof staffMembers[0]) => {
+    setModalMode('delete');
     setSelectedStaff(staff);
     setIsModalVisible(true);
   };
@@ -126,6 +123,8 @@ export const Office = () => {
           email={officeData.emailAddress}
           capacity={officeData.maximumCapacity}
           address={officeData.physicalAddress}
+          accentColor={OFFICE_COLORS_MAP[officeData.officeColor as keyof typeof OFFICE_COLORS_MAP]}
+          onEdit={() => handleEditOffice(officeData)}
         />
         
         <View style={styles.staffSection}>
@@ -140,34 +139,15 @@ export const Office = () => {
           <View style={styles.staffList}>
             {filteredStaffMembers.length > 0 ? (
               filteredStaffMembers.map(staff => (
-                <>
+                <View key={staff.id}>
                   <UserListItem
-                    key={staff.id}
+                    key={`list-${staff.id}`}
                     name={`${staff.firstName} ${staff.lastName}`}
-                    avatar={staff.avatar}
+                    avatar={staff.avatar || ''}
                     isInOffice={staff.isInOffice}
                     onOptionsPress={() => handleStaffOptionsPress(staff)}
                   />
-                  <TouchableOpacity
-                    onPress={() => {
-                      setModalMode('edit');
-                      setSelectedStaff(staff);
-                      setIsModalVisible(true);
-                    }}
-                  >
-                    <Text>Edit</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    onPress={() => {
-                      setModalMode('delete');
-                      setSelectedStaff(staff);
-                      setIsModalVisible(true);
-                    }}
-                  >
-                    <Text>Delete</Text>
-                  </TouchableOpacity>
-                </>
+                </View>
               ))
             ) : (
               <View style={styles.noResultsContainer}>

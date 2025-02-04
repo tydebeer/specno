@@ -15,7 +15,7 @@ export const Title: React.FC<TitleProps> = ({ text }) => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 0,
     paddingVertical: 16,
   },
   title: {

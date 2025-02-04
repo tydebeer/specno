@@ -21,19 +21,19 @@ export const ColorPicker = ({ colorKey, isSelected, onSelect }: ColorPickerProps
 
 const styles = StyleSheet.create({
   container: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    margin: 8,
+    margin: 5,
   },
   selectedContainer: {
     backgroundColor: '#c0c0c0',
   },
   colorCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
   },
 }); 

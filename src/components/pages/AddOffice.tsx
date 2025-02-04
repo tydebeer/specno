@@ -1,18 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, SafeAreaView, Platform, StatusBar } from 'react-native';
+import { View, StyleSheet, SafeAreaView, Platform, StatusBar, ScrollView } from 'react-native';
 import { InputField } from '../atoms/InputField';
 import { PrimaryButton } from '../atoms/PrimaryButton';
 import { Title } from '../atoms/Title';
 import { ColorPicker } from '../atoms/ColorPicker';
 import { Header } from '../atoms/Header';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { OFFICE_COLORS_MAP, OfficeColorKey } from '../../config/uiConfig';
 import { OfficeData } from '../../interfaces/OfficeData';
 import { officeService } from '../../services/officeService';
 import { validateEmail, validateSAPhoneNumber, validateCapacity } from '../../utils/validation';
+import { StaffModal } from '../molecules/StaffModal';
+import { Snackbar } from '../atoms/Snackbar';
+
+type RootStackParamList = {
+  Home: undefined;
+  AddOffice: { officeData?: OfficeData };
+};
 
 export const AddOffice = ({ route }: { route: any }) => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const existingOffice = route.params?.officeData;
   const isEditing = !!existingOffice;
 
@@ -28,18 +36,24 @@ export const AddOffice = ({ route }: { route: any }) => {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    visible: false,
+    message: '',
+    type: 'success' as 'success' | 'error'
+  });
 
   useEffect(() => {
     if (existingOffice) {
       setOfficeData({
         id: existingOffice.id || '',
-        officeName: existingOffice.companyName,
-        physicalAddress: existingOffice.address,
-        emailAddress: existingOffice.email,
-        phoneNumber: existingOffice.phoneNumber,
-        maximumCapacity: existingOffice.capacity,
-        officeColor: existingOffice.color,
-        staffCount: existingOffice.staffCount
+        officeName: existingOffice.officeName || '',
+        physicalAddress: existingOffice.physicalAddress || '',
+        emailAddress: existingOffice.emailAddress || '',
+        phoneNumber: existingOffice.phoneNumber || '',
+        maximumCapacity: Number(existingOffice.maximumCapacity) || 0,
+        officeColor: existingOffice.officeColor || 'YELLOW',
+        staffCount: existingOffice.staffCount || 0
       });
     }
   }, [existingOffice]);
@@ -99,110 +113,190 @@ export const AddOffice = ({ route }: { route: any }) => {
       };
 
       if (isEditing && existingOffice?.id) {
-        const response = await officeService.updateOffice(existingOffice.id, officeToSave);
-        console.log('Update response:', response);
+        await officeService.updateOffice(existingOffice.id, officeToSave);
+        setSnackbar({
+          visible: true,
+          message: 'Office updated successfully',
+          type: 'success'
+        });
       } else {
-        const response = await officeService.createOffice(officeToSave);
-        console.log('Create response:', response);
+        await officeService.createOffice(officeToSave);
+        setSnackbar({
+          visible: true,
+          message: 'Office created successfully',
+          type: 'success'
+        });
       }
       
-      navigation.goBack();
+      setTimeout(() => {
+        navigation.navigate('Home');
+      }, 1000);
     } catch (error) {
-      console.error('Error saving office:', error);
+      setSnackbar({
+        visible: true,
+        message: 'Error saving office. Please try again.',
+        type: 'error'
+      });
+    }
+  };
+
+  const handleDeleteOffice = async () => {
+    try {
+      if (existingOffice?.id) {
+        await officeService.deleteOffice(existingOffice.id);
+        setSnackbar({
+          visible: true,
+          message: 'Office deleted successfully',
+          type: 'success'
+        });
+        setTimeout(() => {
+          navigation.navigate('Home');
+        }, 1000);
+      }
+    } catch (error) {
+      setSnackbar({
+        visible: true,
+        message: 'Error deleting office. Please try again.',
+        type: 'error'
+      });
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
       <Header 
         title={isEditing ? "Edit Office" : "New Office"}
         onBackPress={() => navigation.goBack()}
       />
       
-      <View style={styles.content}>
-        <InputField
-          placeholder="Office Name"
-          value={officeData.officeName}
-          onChangeText={(text) => handleInputChange('officeName', text)}
-          error={errors.officeName}
-        />
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.content}>
+          <InputField
+            placeholder="Office Name"
+            value={officeData.officeName}
+            onChangeText={(text) => handleInputChange('officeName', text)}
+            error={errors.officeName}
+          />
 
-        <InputField
-          placeholder="Physical Address"
-          value={officeData.physicalAddress}
-          onChangeText={(text) => handleInputChange('physicalAddress', text)}
-          error={errors.physicalAddress}
-        />
+          <InputField
+            placeholder="Physical Address"
+            value={officeData.physicalAddress}
+            onChangeText={(text) => handleInputChange('physicalAddress', text)}
+            error={errors.physicalAddress}
+          />
 
-        <InputField
-          placeholder="Email Address"
-          value={officeData.emailAddress}
-          onChangeText={(text) => handleInputChange('emailAddress', text)}
-          error={errors.emailAddress}
-        />
+          <InputField
+            placeholder="Email Address"
+            value={officeData.emailAddress}
+            onChangeText={(text) => handleInputChange('emailAddress', text)}
+            error={errors.emailAddress}
+          />
 
-        <InputField
-          placeholder="Phone Number"
-          value={officeData.phoneNumber}
-          onChangeText={(text) => handleInputChange('phoneNumber', text)}
-          error={errors.phoneNumber}
-        />
+          <InputField
+            placeholder="Phone Number"
+            value={officeData.phoneNumber}
+            onChangeText={(text) => handleInputChange('phoneNumber', text)}
+            error={errors.phoneNumber}
+          />
 
-        <InputField
-          placeholder="Maximum Capacity"
-          value={officeData.maximumCapacity.toString()}
-          onChangeText={(text) => handleInputChange('maximumCapacity', text)}
-          error={errors.maximumCapacity}
-          keyboardType="numeric"
-          returnKeyType="done"
-        />
+          <InputField
+            placeholder="Maximum Capacity"
+            value={String(officeData.maximumCapacity || 0)}
+            onChangeText={(text) => handleInputChange('maximumCapacity', text)}
+            error={errors.maximumCapacity}
+            keyboardType="numeric"
+            returnKeyType="done"
+          />
 
-        <Title text="Office Colour" />
-        
-        <View style={styles.colorGrid}>
-          {(Object.keys(OFFICE_COLORS_MAP) as OfficeColorKey[]).map((colorKey) => (
-            <ColorPicker
-              key={colorKey}
-              colorKey={colorKey}
-              isSelected={officeData.officeColor === colorKey}
-              onSelect={() => handleColorSelect(colorKey)}
-            />
-          ))}
+          <Title text="Office Colour" />
+          
+          <View style={styles.colorGrid}>
+            {(Object.keys(OFFICE_COLORS_MAP) as OfficeColorKey[]).map((colorKey) => (
+              <ColorPicker
+                key={colorKey}
+                colorKey={colorKey}
+                isSelected={officeData.officeColor === colorKey}
+                onSelect={() => handleColorSelect(colorKey)}
+              />
+            ))}
+          </View>
         </View>
 
-        <PrimaryButton
-          title={isEditing ? "SAVE CHANGES" : "ADD OFFICE"}
-          onPress={handleAddOffice}
-        />
-      </View>
+        <View style={styles.buttonContainer}>
+          <PrimaryButton
+            title={isEditing ? "UPDATE OFFICE" : "ADD OFFICE"}
+            onPress={handleAddOffice}
+          />
+          
+          {isEditing && (
+            <PrimaryButton
+              title="DELETE OFFICE"
+              onPress={() => setIsDeleteModalVisible(true)}
+              variant="delete"
+            />
+          )}
+        </View>
+      </ScrollView>
+
+      <StaffModal
+        visible={isDeleteModalVisible}
+        onClose={() => setIsDeleteModalVisible(false)}
+        mode="delete"
+        type="office"
+        onDelete={handleDeleteOffice}
+        onSubmit={() => {}}
+      />
+
+      <Snackbar
+        message={snackbar.message}
+        isVisible={snackbar.visible}
+        type={snackbar.type}
+        onDismiss={() => setSnackbar(prev => ({ ...prev, visible: false }))}
+      />
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: '#fff',
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
   content: {
     flex: 1,
     padding: 20,
+    paddingBottom: 0,
   },
   colorTitle: {
-    fontSize: 24,
+    fontSize: 16,
     fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 15,
+    marginTop: 4,
+    marginBottom: 4,
+    paddingHorizontal: 16,
   },
   colorGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 4,
+    paddingHorizontal: 16,
+    width: '100%',
   },
-  addButton: {
-    marginTop: 'auto',
-    marginBottom: 20,
+  buttonContainer: {
+    padding: 16,
+    gap: 4,
+    paddingBottom: 20,
   },
 }); 

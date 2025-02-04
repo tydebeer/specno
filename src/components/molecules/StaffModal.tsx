@@ -14,6 +14,7 @@ import { StaffData } from '../../interfaces/StaffData';
 import { InputField } from '../atoms/InputField';
 import { AvatarPicker } from '../atoms/AvatarPicker';
 import { AVATARS } from '../../config/uiConfig';
+import { SecondaryButton } from '../atoms/SecondaryButton';
 
 const { width } = Dimensions.get('window');
 const MODAL_WIDTH = width * 0.85;
@@ -194,52 +195,103 @@ export const StaffModal: React.FC<StaffModalProps> = ({
         onPress={handleClose}
       >
         <View style={styles.modalContainer}>
-          <View style={styles.header}>
-            <TouchableOpacity 
-              onPress={() => currentStep > 0 ? setCurrentStep(currentStep - 1) : handleClose()}
-              style={styles.closeButton}
-            >
-              <Ionicons 
-                name={currentStep > 0 ? "arrow-back" : undefined} 
-                size={24} 
-                color="#000" 
-              />
-            </TouchableOpacity>
-            <Text style={styles.title}>{getModalTitle()}</Text>
-            <TouchableOpacity 
-              onPress={handleClose}
-              style={styles.closeButton}
-            >
-              <Ionicons name="close" size={24} color="#000" />
-            </TouchableOpacity>
-          </View>
+          {/* Only show header if not in staff delete mode */}
+          {!(mode === 'delete' && type === 'staff') && (
+            <View style={styles.header}>
+              {mode === 'delete' && type === 'office' ? (
+                <>
+                  <View style={styles.closeButton} />
+                  <Text style={styles.title}>Are You Sure You Want To Delete Office?</Text>
+                  <TouchableOpacity 
+                    onPress={handleClose}
+                    style={styles.closeButton}
+                  >
+                    <Ionicons name="close" size={24} color="#000" />
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <>
+                  <TouchableOpacity 
+                    onPress={() => currentStep > 0 ? setCurrentStep(currentStep - 1) : handleClose()}
+                    style={styles.closeButton}
+                  >
+                    <Ionicons 
+                      name={currentStep > 0 ? "arrow-back" : undefined} 
+                      size={24} 
+                      color="#000" 
+                    />
+                  </TouchableOpacity>
+                  <Text style={styles.title}>{getModalTitle()}</Text>
+                  <TouchableOpacity 
+                    onPress={handleClose}
+                    style={styles.closeButton}
+                  >
+                    <Ionicons name="close" size={24} color="#000" />
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          )}
 
-          <View style={styles.mainContent}>
-            {steps[currentStep].content}
-          </View>
+          {mode !== 'delete' && (
+            <View style={styles.mainContent}>
+              {steps[currentStep].content}
+            </View>
+          )}
 
           <View style={styles.footer}>
-            {steps.length > 1 && (
-              <View style={styles.stepIndicator}>
-                {steps.map((_, index) => (
-                  <View
-                    key={index}
-                    style={[
-                      styles.dot,
-                      currentStep === index && styles.activeDot
-                    ]}
+            {mode === 'delete' && type === 'office' ? (
+              <>
+                <PrimaryButton
+                  title="DELETE OFFICE"
+                  onPress={handleNext}
+                  variant="delete"
+                />
+                <SecondaryButton
+                  title="KEEP OFFICE"
+                  onPress={handleClose}
+                />
+              </>
+            ) : mode === 'delete' && type === 'staff' ? (
+              <>
+                <PrimaryButton
+                  title="EDIT STAFF MEMBER"
+                  onPress={() => {
+                    setFormData(initialData);
+                    onClose();
+                    onSubmit({ ...initialData, mode: 'edit' });
+                  }}
+                />
+                <SecondaryButton
+                  title="DELETE STAFF MEMBER"
+                  onPress={handleNext}
+                />
+              </>
+            ) : (
+              <>
+                {steps.length > 1 && (
+                  <View style={styles.stepIndicator}>
+                    {steps.map((_, index) => (
+                      <View
+                        key={index}
+                        style={[
+                          styles.dot,
+                          currentStep === index && styles.activeDot
+                        ]}
+                      />
+                    ))}
+                  </View>
+                )}
+                
+                <View style={styles.buttonContainer}>
+                  <PrimaryButton
+                    title={getButtonText()}
+                    onPress={handleNext}
+                    variant={mode === 'delete' ? 'delete' : 'primary'}
                   />
-                ))}
-              </View>
+                </View>
+              </>
             )}
-            
-            <View style={styles.buttonContainer}>
-              <PrimaryButton
-                title={getButtonText()}
-                onPress={handleNext}
-                variant={mode === 'delete' ? 'delete' : 'primary'}
-              />
-            </View>
           </View>
         </View>
       </TouchableOpacity>
@@ -256,12 +308,9 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: MODAL_WIDTH,
-    height: '90%',
     backgroundColor: '#fff',
     borderRadius: 20,
     padding: 20,
-    flexDirection: 'column',
-    justifyContent: 'space-between',
   },
   header: {
     flexDirection: 'row',
@@ -274,7 +323,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   footer: {
-    gap: 16,
+    gap: 4,
   },
   scrollContainer: {
     flexGrow: 1, // Allows scrolling if content overflows
@@ -301,6 +350,7 @@ const styles = StyleSheet.create({
     color: '#000',
     flex: 1,
     textAlign: 'center',
+    marginHorizontal: 40, // Add space for the empty left space
   },
   deleteContent: {
     padding: 20,

@@ -41,8 +41,6 @@ const styles = StyleSheet.create({
     height: 60,
     backgroundColor: '#fff',
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
   },
   backButton: {
     padding: 8,

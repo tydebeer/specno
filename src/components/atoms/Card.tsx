@@ -10,6 +10,7 @@ interface CardProps {
   capacity: number;
   address: string;
   onEdit?: () => void;
+  accentColor?: string;
 }
 
 export const Card: React.FC<CardProps> = ({
@@ -20,6 +21,7 @@ export const Card: React.FC<CardProps> = ({
   capacity,
   address,
   onEdit,
+  accentColor = '#2F80ED',
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const rotateAnim = useRef(new Animated.Value(0)).current;
@@ -40,7 +42,7 @@ export const Card: React.FC<CardProps> = ({
   return (
     <View style={styles.cardContainer}>
       <View style={styles.card}>
-        <View style={styles.accentBar} />
+        <View style={[styles.accentBar, { backgroundColor: accentColor }]} />
         <View style={styles.contentWrapper}>
           <View style={styles.header}>
             <Text style={styles.title}>{companyName}</Text>

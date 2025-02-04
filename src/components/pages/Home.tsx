@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, SafeAreaView, TouchableOpacity, Platform, StatusBar, ScrollView, RefreshControl } from 'react-native';
+import { StyleSheet, View, SafeAreaView, TouchableOpacity, Platform, StatusBar, ScrollView } from 'react-native';
 import { Title } from '../atoms';
 import { Card } from '../atoms/Card';
 import { ActionButton } from '../atoms/ActionButton';
@@ -8,12 +8,14 @@ import { OfficeData } from '../../interfaces/OfficeData';
 import { LoadingSpinner } from '../atoms/LoadingSpinner';
 import { staffService } from '../../services/staffService';
 import { StaffData } from '../../interfaces/StaffData';
+import { OFFICE_COLORS_MAP } from '../../config/uiConfig';
+import { Snackbar } from '../atoms/Snackbar';
 
 export const Home = ({ navigation }: { navigation: any }) => {
   const [offices, setOffices] = useState<OfficeData[]>([]);
   const [staffByOffice, setStaffByOffice] = useState<Record<string, StaffData[]>>({});
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -35,6 +37,7 @@ export const Home = ({ navigation }: { navigation: any }) => {
       setStaffByOffice(staffMap);
     } catch (error) {
       console.error('Error fetching data:', error);
+      setError('Failed to load offices. Please try again.');
     }
   }, []);
 
@@ -42,14 +45,28 @@ export const Home = ({ navigation }: { navigation: any }) => {
     const loadInitialData = async () => {
       await fetchData();
       setLoading(false);
+
+      const unsubscribe = officeService.subscribeToOffices((updatedOffices) => {
+        setOffices(updatedOffices);
+        updatedOffices.forEach(async (office) => {
+          if (office.id) {
+            try {
+              const staff = await staffService.getStaffByOffice(office.id);
+              setStaffByOffice(prev => ({
+                ...prev,
+                [office.id!]: staff
+              }));
+            } catch (error) {
+              console.error('Error fetching staff:', error);
+              setError('Failed to load staff members. Please try again.');
+            }
+          }
+        });
+      });
+
+      return () => unsubscribe();
     };
     loadInitialData();
-  }, [fetchData]);
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchData();
-    setRefreshing(false);
   }, [fetchData]);
 
   const handleCardPress = (office: OfficeData) => {
@@ -85,14 +102,6 @@ export const Home = ({ navigation }: { navigation: any }) => {
           offices.length === 0 && styles.emptyContainer
         ]}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={['#2196F3']}
-            tintColor="#2196F3"
-          />
-        }
       >
         {offices.length === 0 ? (
           <View style={styles.emptyStateContainer}>
@@ -112,6 +121,7 @@ export const Home = ({ navigation }: { navigation: any }) => {
                 capacity={office.maximumCapacity}
                 address={office.physicalAddress}
                 onEdit={() => handleEditOffice(office)}
+                accentColor={OFFICE_COLORS_MAP[office.officeColor as keyof typeof OFFICE_COLORS_MAP]}
               />
             </TouchableOpacity>
           ))
@@ -123,6 +133,13 @@ export const Home = ({ navigation }: { navigation: any }) => {
           onPress={() => navigation.navigate('AddOffice')}
         />
       </View>
+
+      <Snackbar
+        message={error || ''}
+        isVisible={!!error}
+        onDismiss={() => setError(null)}
+        type="error"
+      />
     </SafeAreaView>
   );
 };

@@ -25,12 +25,14 @@ const StaffListItem: React.FC<Props> = ({
         <Text style={styles.name}>{name}</Text>
       </View>
       
-      <TouchableOpacity 
-        onPress={onOptionsPress}
-        style={styles.optionsButton}
-      >
-        <Feather name="more-vertical" size={24} color="#666" />
-      </TouchableOpacity>
+      <View style={styles.actionsContainer}>    
+        <TouchableOpacity 
+          onPress={onOptionsPress}
+          style={styles.actionButton}
+        >
+          <Feather name="more-vertical" size={24} color="#666" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -58,7 +60,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#333',
   },
-  optionsButton: {
+  actionsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionButton: {
     padding: 8,
   },
 });

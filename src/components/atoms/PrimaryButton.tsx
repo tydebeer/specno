@@ -32,12 +32,12 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
 const styles = StyleSheet.create({
   button: {
     width: '100%',
-    height: 50,
+    height: 45,
     backgroundColor: '#2F80ED',
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 16,
+    marginVertical: 4,
   },
   deleteButton: {
     backgroundColor: '#F44336',

@@ -1,5 +1,5 @@
 import { database } from '../config/firebase';
-import { ref, get, set, update, remove, push } from 'firebase/database';
+import { ref, get, set, update, remove, push, onValue, off } from 'firebase/database';
 import { OfficeData } from '../interfaces/OfficeData';
 
 const COLLECTION_NAME = 'offices';
@@ -52,5 +52,29 @@ export const officeService = {
   async deleteOffice(id: string): Promise<void> {
     const officeRef = ref(database, `${COLLECTION_NAME}/${id}`);
     await remove(officeRef);
-  }
+  },
+
+  subscribeToOffices(callback: (offices: OfficeData[]) => void) {
+    const officesRef = ref(database, COLLECTION_NAME);
+    
+    onValue(officesRef, (snapshot) => {
+      if (!snapshot.exists()) {
+        callback([]);
+        return;
+      }
+      
+      const offices: OfficeData[] = [];
+      snapshot.forEach((childSnapshot) => {
+        offices.push({
+          id: childSnapshot.key,
+          ...childSnapshot.val()
+        } as OfficeData);
+      });
+      
+      callback(offices);
+    });
+
+    // Return unsubscribe function
+    return () => off(officesRef);
+  },
 }; 
