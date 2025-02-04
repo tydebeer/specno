@@ -46,26 +46,35 @@ export const Home = ({ navigation }: { navigation: any }) => {
       await fetchData();
       setLoading(false);
 
-      const unsubscribe = officeService.subscribeToOffices((updatedOffices) => {
+      // Subscribe to office updates
+      const officeUnsubscribe = officeService.subscribeToOffices((updatedOffices) => {
         setOffices(updatedOffices);
-        updatedOffices.forEach(async (office) => {
-          if (office.id) {
-            try {
-              const staff = await staffService.getStaffByOffice(office.id);
-              setStaffByOffice(prev => ({
-                ...prev,
-                [office.id!]: staff
-              }));
-            } catch (error) {
-              console.error('Error fetching staff:', error);
-              setError('Failed to load staff members. Please try again.');
-            }
-          }
-        });
       });
 
-      return () => unsubscribe();
+      // Subscribe to staff updates
+      const staffUnsubscribe = staffService.subscribeToStaff((allStaff) => {
+        const newStaffMap: Record<string, StaffData[]> = {};
+        
+        // Group staff by office
+        allStaff.forEach((staffMember) => {
+          if (staffMember.officeId) {
+            if (!newStaffMap[staffMember.officeId]) {
+              newStaffMap[staffMember.officeId] = [];
+            }
+            newStaffMap[staffMember.officeId].push(staffMember);
+          }
+        });
+        
+        setStaffByOffice(newStaffMap);
+      });
+
+      // Cleanup both subscriptions
+      return () => {
+        officeUnsubscribe();
+        staffUnsubscribe();
+      };
     };
+    
     loadInitialData();
   }, [fetchData]);
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
   View, 
@@ -29,8 +29,14 @@ export const GenericModal: React.FC<GenericModalProps> = ({
   onEdit,
   isOffice = false,
 }) => {
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(isOffice);
   const entityType = isOffice ? 'Office' : 'Staff Member';
+
+  useEffect(() => {
+    if (visible) {
+      setShowDeleteConfirm(isOffice);
+    }
+  }, [visible, isOffice]);
 
   const handleDelete = () => {
     setShowDeleteConfirm(true);
@@ -56,12 +62,14 @@ export const GenericModal: React.FC<GenericModalProps> = ({
           {showDeleteConfirm ? (
             <>
               <View style={styles.header}>
-                <TouchableOpacity 
-                  onPress={() => setShowDeleteConfirm(false)}
-                  style={styles.closeButton}
-                >
-                  <Ionicons name="arrow-back" size={24} color="#000" />
-                </TouchableOpacity>
+                {!isOffice && (
+                  <TouchableOpacity 
+                    onPress={() => setShowDeleteConfirm(false)}
+                    style={styles.closeButton}
+                  >
+                    <Ionicons name="arrow-back" size={24} color="#000" />
+                  </TouchableOpacity>
+                )}
                 <Text style={styles.title}>
                   Are You Sure You Want To Delete {entityType}?
                 </Text>

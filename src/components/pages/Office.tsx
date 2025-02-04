@@ -13,6 +13,7 @@ import { staffService } from '../../services/staffService';
 import { OFFICE_COLORS_MAP } from '../../config/uiConfig';
 import { OfficeData } from '../../interfaces/OfficeData';
 import { GenericModal } from '../molecules/GenericModal';
+import { Snackbar } from '../atoms/Snackbar';
 
 type RouteParams = {
   officeData: OfficeData;
@@ -28,7 +29,8 @@ export const Office = ({ navigation }: { navigation: any }) => {
   const [isDeleteModalVisible, setIsDeleteModalVisible] = React.useState(false);
   const [selectedStaff, setSelectedStaff] = React.useState<StaffData | null>(null);
   const [modalMode, setModalMode] = useState<'add' | 'edit' | 'delete'>('add');
-
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
   useEffect(() => {
     // Subscribe to staff updates
@@ -79,6 +81,13 @@ export const Office = ({ navigation }: { navigation: any }) => {
     try {
       switch (modalMode) {
         case 'add':
+          if (staffMembers.length >= officeData.maximumCapacity) {
+            setSnackbarMessage(`Cannot add more staff. Maximum capacity of ${officeData.maximumCapacity} reached.`);
+            setSnackbarVisible(true);
+            setIsModalVisible(false);
+            return;
+          }
+          
           const newStaff: Omit<StaffData, 'id'> = {
             firstName: data.firstName,
             lastName: data.lastName,
@@ -114,6 +123,8 @@ export const Office = ({ navigation }: { navigation: any }) => {
       
     } catch (error) {
       console.error('Error handling staff action:', error);
+      setSnackbarMessage('An error occurred while processing your request.');
+      setSnackbarVisible(true);
     }
   };
 
@@ -201,6 +212,12 @@ export const Office = ({ navigation }: { navigation: any }) => {
         onClose={handleCloseStaffModal}
         initialData={selectedStaff}
         onSubmit={handleModalAction}
+      />
+
+      <Snackbar
+        isVisible={snackbarVisible}
+        message={snackbarMessage}
+        onDismiss={() => setSnackbarVisible(false)}
       />
 
     </SafeAreaView>
