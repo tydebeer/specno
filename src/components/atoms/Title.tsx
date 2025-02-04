@@ -3,11 +3,12 @@ import { StyleSheet, Text, View } from 'react-native';
 
 interface TitleProps {
   text: string;
+  withPadding?: boolean;
 }
 
-export const Title: React.FC<TitleProps> = ({ text }) => {
+export const Title: React.FC<TitleProps> = ({ text, withPadding = false }) => {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, withPadding && styles.withPadding]}>
       <Text style={styles.title}>{text}</Text>
     </View>
   );
@@ -15,8 +16,10 @@ export const Title: React.FC<TitleProps> = ({ text }) => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 0,
     paddingVertical: 16,
+  },
+  withPadding: {
+    paddingHorizontal: 20,
   },
   title: {
     fontSize: 32,

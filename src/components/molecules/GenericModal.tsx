@@ -1,14 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   StyleSheet, 
   View, 
   Modal, 
-  Text, 
   TouchableOpacity,
   Dimensions,
+  Text,
 } from 'react-native';
 import { PrimaryButton } from '../atoms/PrimaryButton';
 import { SecondaryButton } from '../atoms/SecondaryButton';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 const MODAL_WIDTH = width * 0.85;
@@ -16,16 +17,29 @@ const MODAL_WIDTH = width * 0.85;
 interface GenericModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (data?: any) => void;
-  onDelete?: () => void;
+  onDelete: () => void;
+  onEdit?: () => void;
+  isOffice?: boolean;
 }
 
 export const GenericModal: React.FC<GenericModalProps> = ({
   visible,
   onClose,
-  onSubmit,
   onDelete,
+  onEdit,
+  isOffice = false,
 }) => {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const entityType = isOffice ? 'Office' : 'Staff Member';
+
+  const handleDelete = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const handleClose = () => {
+    setShowDeleteConfirm(false);
+    onClose();
+  };
 
   return (
     <Modal
@@ -36,10 +50,70 @@ export const GenericModal: React.FC<GenericModalProps> = ({
       <TouchableOpacity 
         style={styles.overlay} 
         activeOpacity={1} 
-        onPress={onClose}
+        onPress={handleClose}
       >
         <View style={styles.modalContainer}>
-
+          {showDeleteConfirm ? (
+            <>
+              <View style={styles.header}>
+                <TouchableOpacity 
+                  onPress={() => setShowDeleteConfirm(false)}
+                  style={styles.closeButton}
+                >
+                  <Ionicons name="arrow-back" size={24} color="#000" />
+                </TouchableOpacity>
+                <Text style={styles.title}>
+                  Are You Sure You Want To Delete {entityType}?
+                </Text>
+                <TouchableOpacity 
+                  onPress={handleClose}
+                  style={styles.closeButton}
+                >
+                  <Ionicons name="close" size={24} color="#000" />
+                </TouchableOpacity>
+              </View>
+              <PrimaryButton
+                title={`DELETE ${entityType.toUpperCase()}`}
+                onPress={() => {
+                  onDelete();
+                  handleClose();
+                }}
+                variant="delete"
+              />
+              <SecondaryButton
+                title={`KEEP ${entityType.toUpperCase()}`}
+                onPress={() => handleClose()}
+              />
+            </>
+          ) : (
+            <>
+              <View style={styles.header}>
+                <View style={styles.closeButton} />
+                <Text style={styles.title}>
+                  {entityType} Options
+                </Text>
+                <TouchableOpacity 
+                  onPress={handleClose}
+                  style={styles.closeButton}
+                >
+                  <Ionicons name="close" size={24} color="#000" />
+                </TouchableOpacity>
+              </View>
+              {onEdit && (
+                <PrimaryButton
+                  title={`EDIT ${entityType.toUpperCase()}`}
+                  onPress={() => {
+                    onEdit();
+                    handleClose();
+                  }}
+                />
+              )}
+              <SecondaryButton
+                title={`DELETE ${entityType.toUpperCase()}`}
+                onPress={handleDelete}
+              />
+            </>
+          )}
         </View>
       </TouchableOpacity>
     </Modal>
@@ -58,97 +132,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 20,
     padding: 20,
+    gap: 16,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: 16,
   },
-  mainContent: {
+  title: {
     flex: 1,
-    justifyContent: 'center',
-    paddingVertical: 20,
-  },
-  footer: {
-    gap: 4,
-  },
-  scrollContainer: {
-    flexGrow: 1, // Allows scrolling if content overflows
-    justifyContent: 'center', // Centers content vertically if there's space
-  },
-  stepIndicator: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-  },
-  buttonContainer: {
-    width: '100%',
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#000',
+    textAlign: 'center',
+    marginHorizontal: 8,
+    paddingHorizontal: 4,
   },
   closeButton: {
     width: 40,
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#000',
-    flex: 1,
-    textAlign: 'center',
-    marginHorizontal: 40, // Add space for the empty left space
-  },
-  deleteContent: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  deleteText: {
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  deleteSubtext: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-  },
-  deleteButton: {
-    backgroundColor: '#DC3545',
-  },
-  stepContent: {
-    flexDirection: 'column', // Ensures inputs stack vertically
-    gap: 20, // Adds spacing between inputs
-    width: '100%', // Prevents shrinking
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    padding: 12,
-    width: '100%',
-  },
-  activeDot: {
-    backgroundColor: '#2196F3',
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#E0E0E0',
-  },
-  stepTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  avatarGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    width: '100%',
-    paddingHorizontal: 0,
   },
 }); 

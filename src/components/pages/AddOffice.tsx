@@ -13,6 +13,8 @@ import { officeService } from '../../services/officeService';
 import { validateEmail, validateSAPhoneNumber, validateCapacity } from '../../utils/validation';
 import { StaffModal } from '../molecules/StaffModal';
 import { Snackbar } from '../atoms/Snackbar';
+import { SecondaryButton } from '../atoms/SecondaryButton';
+import { GenericModal } from '../molecules/GenericModal';
 
 type RootStackParamList = {
   Home: undefined;
@@ -121,16 +123,17 @@ export const AddOffice = ({ route }: { route: any }) => {
         });
       } else {
         await officeService.createOffice(officeToSave);
-        setSnackbar({
+        setSnackbar({ 
           visible: true,
           message: 'Office created successfully',
           type: 'success'
         });
       }
       
-      setTimeout(() => {
-        navigation.navigate('Home');
-      }, 1000);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Home' }],
+      });
     } catch (error) {
       setSnackbar({
         visible: true,
@@ -144,14 +147,10 @@ export const AddOffice = ({ route }: { route: any }) => {
     try {
       if (existingOffice?.id) {
         await officeService.deleteOffice(existingOffice.id);
-        setSnackbar({
-          visible: true,
-          message: 'Office deleted successfully',
-          type: 'success'
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Home' }],
         });
-        setTimeout(() => {
-          navigation.navigate('Home');
-        }, 1000);
       }
     } catch (error) {
       setSnackbar({
@@ -233,22 +232,19 @@ export const AddOffice = ({ route }: { route: any }) => {
           />
           
           {isEditing && (
-            <PrimaryButton
+            <SecondaryButton
               title="DELETE OFFICE"
               onPress={() => setIsDeleteModalVisible(true)}
-              variant="delete"
             />
           )}
         </View>
       </ScrollView>
 
-      <StaffModal
+      <GenericModal
         visible={isDeleteModalVisible}
         onClose={() => setIsDeleteModalVisible(false)}
-        mode="delete"
-        type="office"
         onDelete={handleDeleteOffice}
-        onSubmit={() => {}}
+        isOffice={true}
       />
 
       <Snackbar
@@ -277,13 +273,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     paddingBottom: 0,
-  },
-  colorTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginTop: 4,
-    marginBottom: 4,
-    paddingHorizontal: 16,
   },
   colorGrid: {
     flexDirection: 'row',

@@ -6,7 +6,10 @@ const { width } = Dimensions.get('window');
 const MODAL_WIDTH = width * 0.85;
 const ITEMS_PER_ROW = 4;
 const TOTAL_GAP = 24; // Total gap between items (8px × 3 gaps)
-const ITEM_WIDTH = (MODAL_WIDTH - 40 - TOTAL_GAP) / ITEMS_PER_ROW; // 40 for modal padding
+const ITEM_WIDTH = Math.min(
+  (MODAL_WIDTH - 40 - TOTAL_GAP) / ITEMS_PER_ROW, // Calculate based on screen
+  60 // Maximum size in pixels
+);
 
 interface AvatarPickerProps {
   avatarKey: keyof typeof AVATARS;
@@ -42,7 +45,7 @@ const styles = StyleSheet.create({
     borderRadius: ITEM_WIDTH / 2,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    margin: 5,
   },
   marginRight: {
     marginRight: 8,

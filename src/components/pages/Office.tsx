@@ -12,6 +12,7 @@ import { StaffData } from '../../interfaces/StaffData';
 import { staffService } from '../../services/staffService';
 import { OFFICE_COLORS_MAP } from '../../config/uiConfig';
 import { OfficeData } from '../../interfaces/OfficeData';
+import { GenericModal } from '../molecules/GenericModal';
 
 type RouteParams = {
   officeData: OfficeData;
@@ -24,8 +25,10 @@ export const Office = ({ navigation }: { navigation: any }) => {
   const [staffMembers, setStaffMembers] = useState<StaffData[]>(initialStaffMembers);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [isModalVisible, setIsModalVisible] = React.useState(false);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = React.useState(false);
   const [selectedStaff, setSelectedStaff] = React.useState<StaffData | null>(null);
   const [modalMode, setModalMode] = useState<'add' | 'edit' | 'delete'>('add');
+
 
   useEffect(() => {
     // Subscribe to staff updates
@@ -52,10 +55,24 @@ export const Office = ({ navigation }: { navigation: any }) => {
     navigation.navigate('AddOffice', { officeData: office });
   };
 
-  const handleStaffOptionsPress = (staff: typeof staffMembers[0]) => {
-    setModalMode('delete');
+  const handleStaffOptionsPress = (staff: StaffData) => {
     setSelectedStaff(staff);
-    setIsModalVisible(true);
+    setModalMode('delete');
+    setIsDeleteModalVisible(true);
+  };
+
+  const handleEditStaff = () => {
+    if (selectedStaff) {
+      setIsDeleteModalVisible(false);
+      setModalMode('edit');
+      setIsModalVisible(true);
+    }
+  };
+
+  const handleCloseStaffModal = () => {
+    setIsModalVisible(false);
+    setSelectedStaff(null);
+    setModalMode('add');
   };
 
   const handleModalAction = async (data?: any) => {
@@ -97,7 +114,6 @@ export const Office = ({ navigation }: { navigation: any }) => {
       
     } catch (error) {
       console.error('Error handling staff action:', error);
-      // You might want to show an error message to the user here
     }
   };
 
@@ -170,19 +186,23 @@ export const Office = ({ navigation }: { navigation: any }) => {
         }} />
       </View>
 
+      <GenericModal
+        visible={isDeleteModalVisible}
+        onClose={() => {
+          setIsDeleteModalVisible(false);
+        }}
+        onDelete={handleModalAction}
+        onEdit={handleEditStaff}
+        isOffice={false}
+      />
+
       <StaffModal
         visible={isModalVisible}
-        onClose={() => {
-          setIsModalVisible(false);
-          setSelectedStaff(null);
-          setModalMode('add');
-        }}
-        mode={modalMode}
-        type="staff"
-        initialData={modalMode === 'add' ? null : selectedStaff}
+        onClose={handleCloseStaffModal}
+        initialData={selectedStaff}
         onSubmit={handleModalAction}
-        onDelete={handleModalAction}
       />
+
     </SafeAreaView>
   );
 };

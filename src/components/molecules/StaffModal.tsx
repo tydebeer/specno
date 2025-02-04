@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
   View, 
@@ -6,7 +6,6 @@ import {
   Text, 
   TouchableOpacity,
   Dimensions,
-  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PrimaryButton } from '../atoms/PrimaryButton';
@@ -14,7 +13,6 @@ import { StaffData } from '../../interfaces/StaffData';
 import { InputField } from '../atoms/InputField';
 import { AvatarPicker } from '../atoms/AvatarPicker';
 import { AVATARS } from '../../config/uiConfig';
-import { SecondaryButton } from '../atoms/SecondaryButton';
 
 const { width } = Dimensions.get('window');
 const MODAL_WIDTH = width * 0.85;
@@ -22,33 +20,34 @@ const MODAL_WIDTH = width * 0.85;
 interface StaffModalProps {
   visible: boolean;
   onClose: () => void;
-  mode: 'add' | 'edit' | 'delete';
-  type: 'staff' | 'office';
   initialData?: any;
   onSubmit: (data?: any) => void;
-  onDelete?: () => void;
 }
 
 export const StaffModal: React.FC<StaffModalProps> = ({
   visible,
   onClose,
-  mode,
-  type,
   initialData,
   onSubmit,
-  onDelete,
 }) => {
   const defaultAvatar = AVATARS[Object.keys(AVATARS)[0] as keyof typeof AVATARS];
-  
   const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState<Partial<StaffData>>(initialData || {
-    firstName: '',
-    lastName: '',
-    avatar: defaultAvatar, // Set default avatar here
+  const [formData, setFormData] = useState<Partial<StaffData>>({
+    firstName: initialData?.firstName || '',
+    lastName: initialData?.lastName || '',
+    avatar: initialData?.avatar || defaultAvatar,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const isDeleteMode = mode === 'delete';
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        firstName: initialData.firstName || '',
+        lastName: initialData.lastName || '',
+        avatar: initialData.avatar || defaultAvatar,
+      });
+    }
+  }, [initialData]);
 
   const validateInputs = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -85,20 +84,7 @@ export const StaffModal: React.FC<StaffModalProps> = ({
     onClose();
   };
 
-  const steps = isDeleteMode ? [
-    {
-      content: (
-        <View style={styles.deleteContent}>
-          <Text style={styles.deleteText}>
-            Are you sure you want to delete this {type}?
-          </Text>
-          <Text style={styles.deleteSubtext}>
-            This action cannot be undone.
-          </Text>
-        </View>
-      )
-    }
-  ] : [
+  const steps = [
     {
       content: (
         <View style={styles.stepContent}>
@@ -138,12 +124,6 @@ export const StaffModal: React.FC<StaffModalProps> = ({
   ];
 
   const handleNext = () => {
-    if (isDeleteMode) {
-      onDelete?.();
-      handleClose();
-      return;
-    }
-
     if (currentStep === 0 && !validateInputs()) {
       return;
     }
@@ -155,7 +135,7 @@ export const StaffModal: React.FC<StaffModalProps> = ({
       setFormData({
         firstName: '',
         lastName: '',
-        avatar: defaultAvatar, // Reset to default avatar when submitting
+        avatar: defaultAvatar,
       });
       setCurrentStep(0);
       handleClose();
@@ -163,21 +143,11 @@ export const StaffModal: React.FC<StaffModalProps> = ({
   };
 
   const getModalTitle = () => {
-    switch (mode) {
-      case 'add':
-        return `New ${type === 'staff' ? 'Staff Member' : 'Office'}`;
-      case 'edit':
-        return `Edit ${type === 'staff' ? 'Staff Member' : 'Office'}`;
-      case 'delete':
-        return `Delete ${type === 'staff' ? 'Staff Member' : 'Office'}`;
-      default:
-        return '';
-    }
+    return initialData ? 'Edit Staff Member' : 'New Staff Member';
   };
 
   const getButtonText = () => {
-    if (isDeleteMode) return 'Delete';
-    if (mode === 'add') {
+    if (initialData === null) {
       return currentStep === steps.length - 1 ? 'Add Staff Member' : 'Next';
     }
     return currentStep === steps.length - 1 ? 'Save Changes' : 'Next';
@@ -195,103 +165,53 @@ export const StaffModal: React.FC<StaffModalProps> = ({
         onPress={handleClose}
       >
         <View style={styles.modalContainer}>
-          {/* Only show header if not in staff delete mode */}
-          {!(mode === 'delete' && type === 'staff') && (
             <View style={styles.header}>
-              {mode === 'delete' && type === 'office' ? (
-                <>
-                  <View style={styles.closeButton} />
-                  <Text style={styles.title}>Are You Sure You Want To Delete Office?</Text>
-                  <TouchableOpacity 
-                    onPress={handleClose}
-                    style={styles.closeButton}
-                  >
-                    <Ionicons name="close" size={24} color="#000" />
-                  </TouchableOpacity>
-                </>
-              ) : (
-                <>
-                  <TouchableOpacity 
-                    onPress={() => currentStep > 0 ? setCurrentStep(currentStep - 1) : handleClose()}
-                    style={styles.closeButton}
-                  >
-                    <Ionicons 
-                      name={currentStep > 0 ? "arrow-back" : undefined} 
-                      size={24} 
-                      color="#000" 
-                    />
-                  </TouchableOpacity>
-                  <Text style={styles.title}>{getModalTitle()}</Text>
-                  <TouchableOpacity 
-                    onPress={handleClose}
-                    style={styles.closeButton}
-                  >
-                    <Ionicons name="close" size={24} color="#000" />
-                  </TouchableOpacity>
-                </>
-              )}
+              <TouchableOpacity 
+                onPress={() => currentStep > 0 ? setCurrentStep(currentStep - 1) : handleClose()}
+                style={styles.closeButton}
+              >
+                <Ionicons 
+                  name={currentStep > 0 ? "arrow-back" : undefined} 
+                  size={24} 
+                  color="#000" 
+                />
+              </TouchableOpacity>
+              <Text style={styles.title}>{getModalTitle()}</Text>
+              <TouchableOpacity 
+                onPress={handleClose}
+                style={styles.closeButton}
+              >
+                <Ionicons name="close" size={24} color="#000" />
+              </TouchableOpacity>
             </View>
-          )}
 
-          {mode !== 'delete' && (
-            <View style={styles.mainContent}>
+            <View>
               {steps[currentStep].content}
             </View>
-          )}
 
           <View style={styles.footer}>
-            {mode === 'delete' && type === 'office' ? (
-              <>
-                <PrimaryButton
-                  title="DELETE OFFICE"
-                  onPress={handleNext}
-                  variant="delete"
-                />
-                <SecondaryButton
-                  title="KEEP OFFICE"
-                  onPress={handleClose}
-                />
-              </>
-            ) : mode === 'delete' && type === 'staff' ? (
-              <>
-                <PrimaryButton
-                  title="EDIT STAFF MEMBER"
-                  onPress={() => {
-                    setFormData(initialData);
-                    onClose();
-                    onSubmit({ ...initialData, mode: 'edit' });
-                  }}
-                />
-                <SecondaryButton
-                  title="DELETE STAFF MEMBER"
-                  onPress={handleNext}
-                />
-              </>
-            ) : (
-              <>
-                {steps.length > 1 && (
-                  <View style={styles.stepIndicator}>
-                    {steps.map((_, index) => (
-                      <View
-                        key={index}
-                        style={[
-                          styles.dot,
-                          currentStep === index && styles.activeDot
-                        ]}
-                      />
-                    ))}
-                  </View>
-                )}
-                
-                <View style={styles.buttonContainer}>
-                  <PrimaryButton
-                    title={getButtonText()}
-                    onPress={handleNext}
-                    variant={mode === 'delete' ? 'delete' : 'primary'}
-                  />
+            <>
+              {steps.length > 1 && (
+                <View style={styles.stepIndicator}>
+                  {steps.map((_, index) => (
+                    <View
+                      key={index}
+                      style={[
+                        styles.dot,
+                        currentStep === index && styles.activeDot
+                      ]}
+                    />
+                  ))}
                 </View>
-              </>
-            )}
+              )}
+              
+              <View style={styles.buttonContainer}>
+                <PrimaryButton
+                  title={getButtonText()}
+                  onPress={handleNext}
+                />
+              </View>
+            </>
           </View>
         </View>
       </TouchableOpacity>
@@ -308,6 +228,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: MODAL_WIDTH,
+    maxHeight: '90%',
     backgroundColor: '#fff',
     borderRadius: 20,
     padding: 20,
@@ -316,24 +237,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  mainContent: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingVertical: 20,
+    marginBottom: 20,
   },
   footer: {
     gap: 4,
-  },
-  scrollContainer: {
-    flexGrow: 1, // Allows scrolling if content overflows
-    justifyContent: 'center', // Centers content vertically if there's space
   },
   stepIndicator: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
+    marginTop: 20,
+    marginBottom: 16,
   },
   buttonContainer: {
     width: '100%',
@@ -345,12 +260,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
+    flex: 1,
     fontSize: 20,
     fontWeight: '600',
     color: '#000',
-    flex: 1,
     textAlign: 'center',
-    marginHorizontal: 40, // Add space for the empty left space
+    marginHorizontal: 8, // Add space between title and icons
   },
   deleteContent: {
     padding: 20,
@@ -382,14 +297,14 @@ const styles = StyleSheet.create({
     padding: 12,
     width: '100%',
   },
-  activeDot: {
-    backgroundColor: '#2196F3',
-  },
   dot: {
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: '#E0E0E0',
+  },
+  activeDot: {
+    backgroundColor: '#2196F3',
   },
   stepTitle: {
     fontSize: 18,

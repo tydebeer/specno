@@ -93,7 +93,7 @@ export const Home = ({ navigation }: { navigation: any }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Title text="All Offices" />
+      <Title text="All Offices" withPadding={true} />
       
       <ScrollView 
         style={styles.scrollView}
